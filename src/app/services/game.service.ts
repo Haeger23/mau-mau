@@ -30,7 +30,7 @@ export class GameService {
   }
 
   private getRandomComputerNames(count: number): string[] {
-    const availableNames = ['Lina', 'Robert', 'Titus', 'Fischi', 'Manu', 'Ole', 'Willi', 'Lukas', 'Hans', 'Sebi'];
+    const availableNames = ['Lina', 'Robert', 'Titus', 'Fischi', 'Manu', 'Ole', 'Willi', 'Lukas', 'Hans'];
     const shuffled = [...availableNames].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count);
   }
