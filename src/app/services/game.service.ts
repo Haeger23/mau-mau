@@ -139,18 +139,19 @@ export class GameService {
 
     if (!topCard) return false;
 
+    // Bei Strafkarten (7er): Nur weitere 7er können gelegt werden
+    // Diese Regel hat Vorrang vor allen anderen (auch vor Buben!)
+    if (state.drawPenalty > 0) {
+      return card.rank === '7';
+    }
+
     // Bube auf Bube ist nicht erlaubt
     if (topCard.rank === 'J' && card.rank === 'J') {
       return false;
     }
 
-    // Bube kann auf alles gelegt werden (außer auf einen anderen Buben)
+    // Bube kann auf alles gelegt werden (außer auf einen anderen Buben und bei Strafkarten)
     if (card.rank === 'J') return true;
-
-    // Bei Strafkarten (7er): Nur weitere 7er können gelegt werden
-    if (state.drawPenalty > 0) {
-      return card.rank === '7';
-    }
 
     // Nach einem Buben: Nur Karten der gewählten Farbe
     if (state.chosenSuit) {
