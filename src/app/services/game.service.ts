@@ -230,9 +230,19 @@ export class GameService {
         setTimeout(() => {
           const currentState = this.gameState();
           // Nur wenn immer noch keine Farbe gewählt wurde und kein Spielende
-          if (!currentState.gameOver && currentState.discardPile[currentState.discardPile.length - 1]?.rank === 'J' && !currentState.chosenSuit) {
+          if (!currentState.gameOver && !currentState.chosenSuit) {
             console.warn('Notfall-Farbwahl für', currentPlayer.name, '- Timeout erreicht');
-            this.chooseSuit('hearts' as Suit);
+            const player = currentState.players.find(p => p.id === currentPlayer.id);
+            if (player) {
+              const suitCounts = this.countSuits(player.hand);
+              const suitEntries = Object.entries(suitCounts);
+              const chosenSuit = suitEntries.length > 0 
+                ? suitEntries.sort((a, b) => b[1] - a[1])[0][0] as Suit
+                : 'hearts' as Suit;
+              this.chooseSuit(chosenSuit);
+            } else {
+              this.chooseSuit('hearts' as Suit);
+            }
           }
         }, 3000);
       }
@@ -406,6 +416,29 @@ export class GameService {
         // Ass-Logik: Spiele das Ass mit einer zusätzlichen Karte
         const additionalCard = currentPlayer.hand.find(c => c.id !== cardToPlay.id);
         this.playCard(cardToPlay, additionalCard);
+        
+        // Wenn die zusätzliche Karte ein Bube ist, muss auch eine Farbe gewählt werden
+        if (additionalCard?.rank === 'J') {
+          const playerId = currentPlayer.id;
+          const playerName = currentPlayer.name;
+          setTimeout(() => {
+            console.log('setTimeout für Farbwahl nach Ass+Bube wird ausgeführt für', playerName);
+            const currentState = this.gameState();
+            if (currentState.gameOver) return;
+            
+            const currentPlayerNow = currentState.players.find(p => p.id === playerId);
+            if (!currentPlayerNow) return;
+            
+            const suitCounts = this.countSuits(currentPlayerNow.hand);
+            const suitEntries = Object.entries(suitCounts);
+            const chosenSuit = suitEntries.length > 0 
+              ? suitEntries.sort((a, b) => b[1] - a[1])[0][0] as Suit
+              : 'hearts' as Suit;
+            
+            console.log(playerName, 'wählt Farbe:', chosenSuit);
+            this.chooseSuit(chosenSuit);
+          }, 500);
+        }
       } else if (cardToPlay.rank === 'J') {
         console.log(currentPlayer.name, 'spielt Bube');
         const playerId = currentPlayer.id; // Speichere ID statt Referenz
