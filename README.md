@@ -229,7 +229,7 @@ service.setSeed(42); // Immer gleiche Kartenverteilung
 npm test
 
 # Unit & Component Tests (einmalig mit Coverage)
-npm test -- --run --coverage
+npm test -- --coverage
 
 # E2E Tests
 npx playwright test
