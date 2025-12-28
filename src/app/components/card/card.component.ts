@@ -10,6 +10,7 @@ import { Card } from '../../models/card.model';
       [class.clickable]="clickable()"
       [class.selected]="selected()"
       [attr.data-suit]="card().suit"
+      [attr.data-testid]="'card-' + card().suit + '-' + card().rank"
       (click)="handleClick()">
       <div class="card-corner top-left">
         <div class="rank">{{ card().rank }}</div>

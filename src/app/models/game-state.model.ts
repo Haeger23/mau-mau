@@ -5,7 +5,9 @@ export interface ChatMessage {
   timestamp: Date;
   playerName: string;
   message: string;
-  type: 'play' | 'draw' | 'suit' | 'skip' | 'penalty' | 'win';
+  type: 'play' | 'draw' | 'suit' | 'skip' | 'penalty' | 'win' | 'mau' | 'mau-mau' | 'queen-round' | 'queen-round-end' | 'penalty-early' | 'penalty-wrong-count' | 'penalty-mau-missed' | 'penalty-mau-false' | 'penalty-maumau-missed' | 'penalty-maumau-false' | 'penalty-queen-missed' | 'penalty-queen-false' | 'penalty-queen-end-false';
+  ruleExplanation?: string;
+  showExplanation?: boolean;
 }
 
 export interface GameState {
@@ -21,6 +23,11 @@ export interface GameState {
   winner: Player | null;
   lastPlayedCard: Card | null;
   chatLog: ChatMessage[];
+  // Schweizer Mau-Mau: Zug-Status
+  lastPlayerAction: 'play' | 'draw-complete' | 'awaiting-draw' | null;
+  // Schweizer Mau-Mau: Damenrunde
+  queenRoundActive: boolean;
+  queenRoundStarterId: string | null;
 }
 
 export type GameAction = 

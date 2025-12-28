@@ -6,4 +6,14 @@ export interface Player {
   hand: Card[];
   isHuman: boolean;
   isActive: boolean;
+  // Schweizer Mau-Mau: Strafkarten-System
+  penaltyCards: Card[];
+  requiredDrawCount: number;
+  drawnThisTurn: number;
+  // Schweizer Mau-Mau: Ansagen
+  hasSaidMau: boolean;
+  hasSaidMauMau: boolean;
+  // Schweizer Mau-Mau: Damenrunde
+  inQueenRound: boolean;
+  isQueenRoundStarter: boolean;
 }

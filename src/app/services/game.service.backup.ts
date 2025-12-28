@@ -2,25 +2,15 @@ import { Injectable, signal } from '@angular/core';
 import { Card, RANKS, SUITS, Suit, Rank } from '../models/card.model';
 import { Player } from '../models/player.model';
 import { GameState } from '../models/game-state.model';
-import { SeededRandom } from '../../utils/seeded-random';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
   private gameState = signal<GameState>(this.createInitialState());
-  private rng = new SeededRandom();
 
   // Public signals
   readonly state = this.gameState.asReadonly();
-
-  /**
-  * Sets seed for deterministic testing
-  * @param seed - Random seed value
-  */
-  setSeed(seed: number): void {
-    this.rng = new SeededRandom(seed);
-  }
 
   // Schweizer Mau-Mau: Original-Regeltexte von mau-mau.ch
   private readonly RULE_EXPLANATIONS: Record<string, string> = {
@@ -60,7 +50,7 @@ export class GameService {
 
   private getRandomComputerNames(count: number): string[] {
     const availableNames = ['Lina', 'Robert', 'Titus', 'Fischi', 'Manu', 'Ole', 'Willi', 'Lukas', 'Hans'];
-    const shuffled = [...availableNames].sort(() => this.rng.next() - 0.5);
+    const shuffled = [...availableNames].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count);
   }
 
@@ -142,7 +132,7 @@ export class GameService {
 
   private shuffleDeck(deck: Card[]): void {
     for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(this.rng.next() * (i + 1));
+      const j = Math.floor(Math.random() * (i + 1));
       [deck[i], deck[j]] = [deck[j], deck[i]];
     }
   }
@@ -653,7 +643,7 @@ export class GameService {
     // Prüfe ob Strafkarten vorhanden sind
     if (currentPlayer.penaltyCards.length > 0) {
       // KI nimmt Strafkarten auf, aber manchmal zu früh (30% Chance)
-      const shouldForget = this.rng.next() < 0.3;
+      const shouldForget = Math.random() < 0.3;
       
       if (shouldForget && state.lastPlayerAction === null) {
         // Zu früh aufgenommen!
@@ -668,23 +658,23 @@ export class GameService {
 
     // ========== SCHRITT 2: Ansagen prüfen ==========
     // Prüfe "Mau" (80% Chance bei 2 Karten)
-    if (currentPlayer.hand.length === 2 && !currentPlayer.hasSaidMau && this.rng.next() < 0.8) {
+    if (currentPlayer.hand.length === 2 && !currentPlayer.hasSaidMau && Math.random() < 0.8) {
       setTimeout(() => this.sayMau(), 300);
     }
 
     // Prüfe "Mau-Mau" (90% Chance bei 1 Karte)
-    if (currentPlayer.hand.length === 1 && !currentPlayer.hasSaidMauMau && this.rng.next() < 0.9) {
+    if (currentPlayer.hand.length === 1 && !currentPlayer.hasSaidMauMau && Math.random() < 0.9) {
       setTimeout(() => this.sayMauMau(), 300);
     }
 
     // Prüfe Damenrunde ankündigen (50% Chance bei 2+ Damen)
     const queenCount = currentPlayer.hand.filter(c => c.rank === 'Q').length;
-    if (queenCount >= 2 && !state.queenRoundActive && this.rng.next() < 0.5) {
+    if (queenCount >= 2 && !state.queenRoundActive && Math.random() < 0.5) {
       setTimeout(() => this.announceQueenRound(), 400);
     }
 
     // Prüfe Damenrunde beenden (30% Chance wenn keine Damen mehr)
-    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter && queenCount === 0 && this.rng.next() < 0.3) {
+    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter && queenCount === 0 && Math.random() < 0.3) {
       setTimeout(() => this.endQueenRound(), 400);
     }
 

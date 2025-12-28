@@ -1,0 +1,222 @@
+<div class="game-board">
+  <!-- Header -->
+  <div class="game-header">
+    <h1>🎴 Mau-Mau (Schweizer Regeln)</h1>
+    <button class="back-btn" data-testid="action-back-to-start" (click)="backToStart()">← Zum Startbildschirm</button>
+  </div>
+
+  @if (gameState()) {
+    <!-- Game Area -->
+    <div class="game-area">
+      
+      <!-- Main Game Area -->
+      <div class="game-main">
+      
+      <!-- Opponent Players -->
+      <div class="opponents">
+        @for (player of opponentPlayers(); track player.id) {
+          <div class="opponent-player" [attr.data-testid]="'opponent-' + player.id">
+            <div class="player-info" [class.active]="player.isActive">
+              <div class="player-name" [attr.data-testid]="'player-' + player.id + '-name'">{{ player.name }}</div>
+              <div class="card-count" [attr.data-testid]="'player-' + player.id + '-hand-size'">{{ player.hand.length }} Karten</div>
+              @if (player.penaltyCards.length > 0) {
+                <div class="penalty-badge">⚠️ {{ player.penaltyCards.length }} Strafkarten</div>
+              }
+              <div class="player-badges">
+                @if (player.hasSaidMau) {
+                  <span class="badge mau">MAU</span>
+                }
+                @if (player.hasSaidMauMau) {
+                  <span class="badge mau-mau">MAU-MAU</span>
+                }
+                @if (player.inQueenRound) {
+                  <span class="badge queen">👑</span>
+                }
+              </div>
+            </div>
+            <div class="opponent-cards">
+              @for (card of player.hand; track card.id) {
+                <div class="card-back"></div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Game Status -->
+      @if (gameState().drawPenalty > 0 || gameState().chosenSuit || gameState().queenRoundActive) {
+        <div class="game-status">
+          @if (gameState().drawPenalty > 0) {
+            <div class="status-message warning" data-testid="game-draw-penalty">
+              ⚠️ Nächster Spieler muss {{ gameState().drawPenalty }} Karten ziehen!
+            </div>
+          }
+          @if (gameState().chosenSuit) {
+            <div class="status-message suit" data-testid="game-chosen-suit">
+              🎯 Gewählte Farbe: 
+              <span [style.color]="getSuitColor(gameState().chosenSuit!)">
+                {{ getSuitSymbol(gameState().chosenSuit!) }} {{ getSuitName(gameState().chosenSuit!) }}
+              </span>
+            </div>
+          }
+          @if (gameState().queenRoundActive) {
+            <div class="status-message queen">
+              👑 Damenrunde aktiv - Nur Damen & 10er!
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Center Area: Deck and Discard Pile -->
+      <div class="center-area">
+        <div class="deck-area">
+          <div class="deck" data-testid="action-draw" (click)="onDrawCard()">
+            <div class="card-back stack"></div>
+            <div class="deck-label" data-testid="deck-size">Nachziehen ({{ gameState().deck.length }})</div>
+          </div>
+        </div>
+
+        <div class="discard-area">
+          @if (topCard()) {
+            <app-card 
+              [card]="topCard()!" 
+              [clickable]="false">
+            </app-card>
+          }
+          <div class="discard-label" data-testid="discard-pile-size">Ablagestapel</div>
+        </div>
+      </div>
+
+      <!-- Human Player Hand -->
+      @if (humanPlayer()) {
+        <div class="player-hand">
+          <div class="player-info main-player" [class.active]="humanPlayer()!.isActive">
+            <div class="player-name" data-testid="player-0-name">{{ humanPlayer()!.name }}</div>
+            <div class="card-count" data-testid="player-0-hand-size">
+              {{ humanPlayer()!.hand.length }} Karten
+              @if (humanPlayer()!.drawnThisTurn > 0 && humanPlayer()!.requiredDrawCount > 0) {
+                <span class="draw-counter">({{ humanPlayer()!.drawnThisTurn }}/{{ humanPlayer()!.requiredDrawCount }} gezogen)</span>
+              }
+            </div>
+            @if (humanPlayer()!.penaltyCards.length > 0) {
+              <div class="penalty-warning">
+                ⚠️ {{ humanPlayer()!.penaltyCards.length }} Strafkarte(n) bereit zum Aufnehmen
+                <button class="pickup-btn" data-testid="action-pickup-penalty" (click)="onPickupPenalty()">Aufnehmen</button>
+              </div>
+            }
+            <div class="player-badges">
+              @if (humanPlayer()!.hasSaidMau) {
+                <span class="badge mau">MAU</span>
+              }
+              @if (humanPlayer()!.hasSaidMauMau) {
+                <span class="badge mau-mau">MAU-MAU</span>
+              }
+              @if (humanPlayer()!.inQueenRound) {
+                <span class="badge queen">👑 In Damenrunde</span>
+              }
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          @if (humanPlayer()!.isActive) {
+            <div class="action-buttons">
+              <button 
+                class="action-btn mau-btn"
+                data-testid="action-mau"
+                [disabled]="humanPlayer()!.hasSaidMau"
+                (click)="onSayMau()">
+                Mau!
+              </button>
+              <button 
+                class="action-btn maumau-btn"
+                data-testid="action-mau-mau"
+                [disabled]="humanPlayer()!.hasSaidMauMau"
+                (click)="onSayMauMau()">
+                Mau-Mau!
+              </button>
+              <button 
+                class="action-btn queen-btn"
+                data-testid="action-queen-round"
+                [disabled]="gameState().queenRoundActive"
+                (click)="onAnnounceQueenRound()">
+                👑 Damenrunde
+              </button>
+              @if (humanPlayer()!.isQueenRoundStarter && gameState().queenRoundActive) {
+                <button 
+                  class="action-btn queen-end-btn"
+                  data-testid="action-end-queen-round"
+                  (click)="onEndQueenRound()">
+                  Damenrunde beenden
+                </button>
+              }
+              @if (canEndTurn()) {
+                <button 
+                  class="action-btn end-turn-btn"
+                  data-testid="action-end-turn"
+                  (click)="onEndTurn()">
+                  Zug beenden
+                </button>
+              }
+            </div>
+          }
+          
+          <div class="hand-cards">
+            @for (card of humanPlayer()!.hand; track card.id) {
+              <app-card
+                [card]="card"
+                [clickable]="isCardClickable(card) && humanPlayer()!.isActive"
+                [selected]="selectedCard()?.id === card.id"
+                (cardClick)="onCardClick(card)">
+              </app-card>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Win Screen -->
+      @if (gameState().gameOver && gameState().winner) {
+        <div class="win-overlay">
+          <div class="win-message">
+            <h2 data-testid="game-winner">🎉 {{ gameState().winner!.name }} gewinnt! 🎉</h2>
+            <button class="new-game-btn large" data-testid="action-new-game" (click)="backToStart()">Zurück zum Startbildschirm</button>
+          </div>
+        </div>
+      }
+
+      <!-- Suit Selector -->
+      <app-suit-selector
+        [show]="showSuitSelector()"
+        (suitSelected)="onSuitSelected($event)">
+      </app-suit-selector>
+      
+      </div>
+      
+      <!-- Chat Log -->
+      <div class="chat-log">
+        <h3>Spielverlauf</h3>
+        <div class="chat-messages" #chatMessages>
+          @for (msg of gameState().chatLog; track $index) {
+            <div class="chat-message" [class]="'type-' + msg.type">
+              <span class="timestamp">{{ formatTime(msg.timestamp) }}</span>
+              <span class="player-name">{{ msg.playerName }}:</span>
+              <span class="message">{{ msg.message }}</span>
+              @if (msg.ruleExplanation) {
+                <button class="rule-btn" (click)="toggleRuleExplanation(msg)">§</button>
+                @if (msg.showExplanation) {
+                  <div class="rule-explanation">{{ msg.ruleExplanation }}</div>
+                }
+              }
+            </div>
+          }
+        </div>
+      </div>
+      
+    </div>
+  } @else {
+    <!-- Welcome Screen -->
+    <div class="welcome-screen">
+      <h2>Willkommen bei Mau-Mau (Schweizer Regeln)!</h2>
+      <p>Klicke auf "Neues Spiel" um zu beginnen.</p>
+    </div>
+  }
+</div>

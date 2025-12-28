@@ -14,6 +14,7 @@ import { Suit } from '../../models/card.model';
               <button 
                 class="suit-button" 
                 [attr.data-suit]="suit.value"
+                [attr.data-testid]="'suit-selector-' + suit.value"
                 (click)="selectSuit(suit.value)">
                 <span class="suit-symbol">{{ suit.symbol }}</span>
                 <span class="suit-name">{{ suit.name }}</span>

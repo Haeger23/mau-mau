@@ -22,6 +22,7 @@ export interface GameSetup {
             <input 
               id="playerName"
               type="text" 
+              data-testid="input-player-name"
               [(ngModel)]="playerName"
               (keyup.enter)="startGame()"
               placeholder="Gib deinen Namen ein..."
@@ -35,6 +36,7 @@ export interface GameSetup {
               @for (count of opponentOptions; track count) {
                 <button
                   class="opponent-btn"
+                  [attr.data-testid]="'select-opponents-' + count"
                   [class.selected]="opponentCount() === count"
                   (click)="selectOpponents(count)">
                   {{ count }} {{ count === 1 ? 'Gegner' : 'Gegner' }}
@@ -45,6 +47,7 @@ export interface GameSetup {
 
           <button 
             class="start-btn"
+            data-testid="action-start-game"
             [disabled]="!playerName().trim()"
             (click)="startGame()">
             Spiel starten
