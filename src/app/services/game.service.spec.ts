@@ -306,5 +306,51 @@ describe('GameService', () => {
       const canPlay = service.canPlayCard(ten);
       expect(typeof canPlay).toBe('boolean');
     });
+
+    it('sollte Strafkarte geben wenn 10 einen Buben repliziert (Bube auf Bube)', () => {
+      service.startNewGame(['Spieler', 'Computer 1']);
+      
+      // Lege einen Buben auf den Ablagestapel
+      const jack: Card = { 
+        id: 'test-jack', 
+        suit: 'hearts', 
+        rank: 'J' 
+      };
+      
+      const ten: Card = { 
+        id: 'test-10', 
+        suit: 'hearts', 
+        rank: '10' 
+      };
+      
+      // Simuliere Spielsituation
+      const state = service.state();
+      const players = [...state.players];
+      const initialHandSize = players[0].hand.length;
+      players[0].hand = [ten];
+      
+      service['gameState'].set({
+        ...state,
+        discardPile: [jack],
+        chosenSuit: 'hearts',
+        players
+      });
+      
+      // 10 sollte spielbar sein (passende Farbe)
+      expect(service.canPlayCard(ten)).toBe(true);
+      
+      // Spiele die Karte
+      const penaltiesBefore = players[0].penaltyCards.length;
+      service.playCard(ten);
+      
+      const stateAfter = service.state();
+      const playerAfter = stateAfter.players[0];
+      
+      // Eine Strafkarte sollte hinzugefügt worden sein
+      expect(playerAfter.penaltyCards.length).toBeGreaterThan(penaltiesBefore);
+      
+      // Die 10 sollte zurück auf der Hand sein
+      expect(playerAfter.hand.some(c => c.rank === '10')).toBe(true);
+    });
   });
 });

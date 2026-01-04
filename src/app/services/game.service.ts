@@ -35,7 +35,8 @@ export class GameService {
     'QUEEN_FALSE': '§9.A DAMENRUNDE: Falsche Damenrunde-Ansage - Spieler hat nicht mindestens zwei echte Damen auf der Hand.',
     'QUEEN_END_MISSED': '§9.A DAMENRUNDE: Falls ein Spieler vergisst eine Damenrunde zu beenden, muss ebenfalls eine Strafkarte gezogen werden.',
     'QUEEN_END_FALSE': '§9.A DAMENRUNDE: Nur der Spieler, welcher die Damenrunde gestartet hat, darf das Ende der Damenrunde ausrufen.',
-    'ACE_LAST_CARD': 'ASS-REGEL: Durch die Pflicht des Spielens, kann ein Spiel nicht mit einem Ass beendet werden.'
+    'ACE_LAST_CARD': 'ASS-REGEL: Durch die Pflicht des Spielens, kann ein Spiel nicht mit einem Ass beendet werden.',
+    'JACK_REPLICATION': '§7 BUBE: Bube auf Bube stinkt! Eine 10 die einen Buben repliziert, verletzt diese Regel.'
   };
 
   private createInitialState(): GameState {
@@ -429,6 +430,24 @@ export class GameService {
         const cardBelow = state.discardPile[state.discardPile.length - 2]; // Die Karte VOR der 10
         if (cardBelow) {
           const currentPlayer = state.players[state.currentPlayerIndex];
+          
+          // 10 auf Bube = Bube-Replikation = Bube auf Bube (VERBOTEN!)
+          if (cardBelow.rank === 'J') {
+            // Die 10 muss zurück auf die Hand
+            const ten = state.discardPile.pop(); // Entferne die 10 vom Ablagestapel
+            if (ten) {
+              currentPlayer.hand.push(ten); // Zurück auf die Hand
+            }
+            
+            this.addChatLog(currentPlayer.name, 'repliziert Bube (Bube auf Bube verboten!) - Karte zurück', 'penalty');
+            this.assignPenaltyCards(
+              currentPlayer.id,
+              1,
+              'Bube-Replikation nicht erlaubt (Bube auf Bube)',
+              'JACK_REPLICATION'
+            );
+            break;
+          }
           
           // Effekt der Karte darunter anwenden
           switch (cardBelow.rank) {
