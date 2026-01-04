@@ -2,6 +2,8 @@
 
 Ein vollständig funktionsfähiges Mau-Mau Kartenspiel mit den offiziellen Schweizer Regeln nach [mau-mau.ch](https://mau-mau.ch).
 
+**Version:** 0.1.0 | [Versioning Guide](VERSIONING.md)
+
 ## Features
 
 - 🎴 **Vollständige Schweizer Regeln**: Alle Regeln gemäß mau-mau.ch implementiert
@@ -351,3 +353,6 @@ Pull Requests sind willkommen! Bitte stelle sicher, dass:
 - ✅ Coverage-Ziele erreicht werden (80%+)
 - ✅ Code dem Style Guide folgt (siehe `AGENTS.md`)
 - ✅ Neue Features mit Tests abgedeckt sind
+- ✅ **Version korrekt erhöht** (siehe [VERSIONING.md](VERSIONING.md))
+  - Update `package.json` und `src/app/app.html`
+  - Folge Semantic Versioning (SemVer)
