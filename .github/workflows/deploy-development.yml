@@ -1,8 +1,6 @@
 name: Deploy Development to GitHub Pages
 
 on:
-  push:
-    branches: [ development ]
   workflow_dispatch:
 
 permissions:
