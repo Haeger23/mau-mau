@@ -1,0 +1,11 @@
+.version {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  font-family: monospace;
+  user-select: none;
+  pointer-events: none;
+  z-index: 1000;
+}
