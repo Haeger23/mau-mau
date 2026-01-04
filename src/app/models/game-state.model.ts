@@ -24,7 +24,7 @@ export interface GameState {
   lastPlayedCard: Card | null;
   chatLog: ChatMessage[];
   // Schweizer Mau-Mau: Zug-Status
-  lastPlayerAction: 'play' | 'draw-complete' | 'awaiting-draw' | null;
+  lastPlayerAction: 'play' | 'draw-complete' | 'awaiting-draw' | 'penalty-pickup' | null;
   // Schweizer Mau-Mau: Damenrunde
   queenRoundActive: boolean;
   queenRoundStarterId: string | null;

@@ -180,6 +180,10 @@ export class GameService {
     for (let i = 0; i < count; i++) {
       if (state.deck.length === 0) {
         this.reshuffleDeck();
+        // Get updated state after reshuffle
+        const updatedState = this.gameState();
+        state.deck = updatedState.deck;
+        state.discardPile = updatedState.discardPile;
       }
       const card = state.deck.pop();
       if (card) {
@@ -207,7 +211,9 @@ export class GameService {
     if (!player || player.penaltyCards.length === 0) return;
 
     // Prüfe ob Spieler einen gültigen Zug gemacht hat
-    if (state.lastPlayerAction !== 'play' && state.lastPlayerAction !== 'draw-complete') {
+    if (state.lastPlayerAction !== 'play' && 
+        state.lastPlayerAction !== 'draw-complete' &&
+        state.lastPlayerAction !== 'penalty-pickup') {
       // Zu früh aufgenommen - Strafe!
       this.assignPenaltyCards(
         playerId,
@@ -229,7 +235,16 @@ export class GameService {
       'draw'
     );
 
+    // Setze lastPlayerAction damit nextTurn() nicht erneut penalty auslöst
+    state.lastPlayerAction = 'penalty-pickup';
     this.gameState.set({ ...state });
+    
+    // Nach Aufnahme: Zug beenden und nächster Spieler
+    // Für KI automatisch, für Menschen manuell
+    if (!player.isHuman) {
+      setTimeout(() => this.nextTurn(), 1000);
+    }
+    // Hinweis: Menschlicher Spieler muss manuell "Zug beenden" klicken
   }
 
   private getCardDisplayName(card: Card): string {
@@ -538,6 +553,10 @@ export class GameService {
     // Ziehe nur EINE Karte
     if (state.deck.length === 0) {
       this.reshuffleDeck();
+      // Get updated state after reshuffle
+      const updatedState = this.gameState();
+      state.deck = updatedState.deck;
+      state.discardPile = updatedState.discardPile;
     }
     const card = state.deck.pop();
     if (card) {
@@ -624,6 +643,12 @@ export class GameService {
   private reshuffleDeck(): void {
     const state = this.gameState();
     
+    // Only reshuffle if there are cards in discard pile besides top card
+    if (state.discardPile.length <= 1) {
+      console.warn('Cannot reshuffle: Not enough cards in discard pile');
+      return;
+    }
+    
     // Take all but top card from discard pile
     const topCard = state.discardPile.pop();
     state.deck = [...state.discardPile];
@@ -678,7 +703,9 @@ export class GameService {
         // Zu früh aufgenommen!
         setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
         return;
-      } else if (state.lastPlayerAction === 'play' || state.lastPlayerAction === 'draw-complete') {
+      } else if (state.lastPlayerAction === 'play' || 
+                 state.lastPlayerAction === 'draw-complete' ||
+                 state.lastPlayerAction === 'penalty-pickup') {
         // Korrekte Timing
         setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
         return;
