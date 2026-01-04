@@ -466,6 +466,12 @@ export class GameService {
               'Bube-Replikation nicht erlaubt (Bube auf Bube)',
               'JACK_REPLICATION'
             );
+            
+            // Zug ist ungültig - nächster Spieler
+            // Für KI automatisch, für Menschen manuell
+            if (!currentPlayer.isHuman) {
+              setTimeout(() => this.nextTurn(), 1000);
+            }
             break;
           }
           
