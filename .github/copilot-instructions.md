@@ -69,3 +69,17 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 4. If unsure which increment to use, ASK the user before committing
 
 **Current Version:** 0.1.0
+
+## Branch Protection
+
+**CRITICAL: The `main` branch is PROTECTED**
+- ❌ NEVER push directly to `main`
+- ✅ Always use Pull Requests from `development` or feature branches
+- ✅ Direct pushes to `development` are allowed
+- See `.github/BRANCH_PROTECTION.md` for details
+
+**Workflow:**
+1. Work on `development` or feature branches
+2. Create PR to `main` when ready for production
+3. Wait for CI/CD checks and approval
+4. Merge via GitHub UI only
