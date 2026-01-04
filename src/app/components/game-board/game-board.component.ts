@@ -142,13 +142,16 @@ export class GameBoardComponent implements AfterViewChecked {
 
   canEndTurn(): boolean {
     const human = this.humanPlayer();
-    if (!human) return false;
+    if (!human || !human.isActive) return false;
     
     const state = this.gameState();
     // Kann beendet werden wenn:
-    // 1. lastPlayerAction ist 'draw-complete' (alle Karten gezogen)
-    // 2. Oder keine requiredDrawCount gesetzt (normaler Zug ohne 7er)
-    return state.lastPlayerAction === 'draw-complete' || 
+    // 1. lastPlayerAction ist 'play' (Karte wurde gespielt, inkl. nach Farbwahl)
+    // 2. lastPlayerAction ist 'draw-complete' (alle Karten gezogen)
+    // 3. lastPlayerAction ist 'penalty-pickup' (Strafkarten aufgenommen)
+    return state.lastPlayerAction === 'play' ||
+           state.lastPlayerAction === 'draw-complete' ||
+           state.lastPlayerAction === 'penalty-pickup' ||
            (human.drawnThisTurn > 0 && human.requiredDrawCount > 0 && human.drawnThisTurn >= human.requiredDrawCount);
   }
 

@@ -399,7 +399,12 @@ export class GameService {
 
     // If Jack was played, don't proceed to next turn
     if (!hasJack) {
-      this.nextTurn();
+      // Für Menschen: Warte auf manuelles "Zug beenden"
+      // Für KI: Automatisch weiter
+      if (!currentPlayer.isHuman) {
+        this.nextTurn();
+      }
+      // Menschlicher Spieler muss "Zug beenden" klicken
     } else {
       console.log('Bube gespielt von', currentPlayer.name, '- warte auf Farbwahl');
       
@@ -538,7 +543,12 @@ export class GameService {
     
     state.chosenSuit = suit;
     this.gameState.set({ ...state });
-    this.nextTurn();
+    
+    // Für Menschen: Warte auf manuelles "Zug beenden"
+    // Für KI: Automatisch weiter
+    if (!currentPlayer.isHuman) {
+      this.nextTurn();
+    }
   }
 
   drawCard(): void {
@@ -713,8 +723,8 @@ export class GameService {
     }
 
     // ========== SCHRITT 2: Ansagen prüfen ==========
-    // Prüfe "Mau" (80% Chance bei 2 Karten)
-    if (currentPlayer.hand.length === 2 && !currentPlayer.hasSaidMau && this.rng.next() < 0.8) {
+    // Prüfe "Mau" (80% Chance bei 1 Karte)
+    if (currentPlayer.hand.length === 1 && !currentPlayer.hasSaidMau && this.rng.next() < 0.8) {
       setTimeout(() => this.sayMau(), 300);
     }
 
@@ -849,8 +859,8 @@ export class GameService {
       return;
     }
 
-    // Prüfe ob Ansage korrekt ist (genau 2 Karten)
-    if (currentPlayer.hand.length === 2) {
+    // Prüfe ob Ansage korrekt ist (genau 1 Karte)
+    if (currentPlayer.hand.length === 1) {
       currentPlayer.hasSaidMau = true;
       this.addChatLog(currentPlayer.name, 'sagt "Mau"', 'mau', 'MAU_SAID');
       this.gameState.set({ ...state });
@@ -859,7 +869,7 @@ export class GameService {
       this.assignPenaltyCards(
         currentPlayer.id,
         1,
-        `"Mau" falsch gesagt (${currentPlayer.hand.length} Karten statt 2)`,
+        `"Mau" falsch gesagt (${currentPlayer.hand.length} Karten statt 1)`,
         'MAU_FALSE'
       );
     }
@@ -1004,8 +1014,8 @@ export class GameService {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
 
-    // Prüfe ob Spieler jetzt genau 2 Karten hat
-    if (currentPlayer.hand.length === 2) {
+    // Prüfe ob Spieler jetzt genau 1 Karte hat
+    if (currentPlayer.hand.length === 1) {
       // Wurde "Mau" gesagt?
       if (!currentPlayer.hasSaidMau) {
         // Strafe: +1 Karte für vergessene Ansage
@@ -1018,8 +1028,8 @@ export class GameService {
       }
     }
 
-    // Wenn mehr als 2 Karten: Reset Mau-Flag
-    if (currentPlayer.hand.length > 2) {
+    // Wenn mehr als 1 Karte: Reset Mau-Flag
+    if (currentPlayer.hand.length > 1) {
       currentPlayer.hasSaidMau = false;
     }
   }
