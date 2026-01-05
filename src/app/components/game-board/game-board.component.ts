@@ -98,7 +98,9 @@ export class GameBoardComponent implements AfterViewChecked {
   }
 
   isCardClickable(card: Card): boolean {
-    return this.canPlayCard(card);
+    // Alle Karten sind klickbar (auch ungültige)
+    // Ungültige Züge führen zu Strafkarten
+    return true;
   }
 
   onCardClick(card: Card): void {
@@ -109,9 +111,18 @@ export class GameBoardComponent implements AfterViewChecked {
     if (this.selectedCard()?.id === card.id) {
       // Deselektiere wenn nochmal geklickt
       this.selectedCard.set(null);
-    } else if (this.canPlayCard(card)) {
+    } else {
       this.selectedCard.set(card);
-      this.playCard(card);
+      
+      // Prüfe ob Karte gültig ist
+      if (this.canPlayCard(card)) {
+        // Gültiger Zug
+        this.playCard(card);
+      } else {
+        // Ungültiger Zug - Strafe!
+        this.gameService.playInvalidCard(card);
+        this.selectedCard.set(null);
+      }
     }
   }
 
@@ -136,23 +147,21 @@ export class GameBoardComponent implements AfterViewChecked {
   }
 
   onEndTurn(): void {
-    this.gameService.endTurn();
+    // Prüfe ob Zug tatsächlich beendet werden kann
+    const canEnd = this.gameService.canEndTurnNow();
+    if (canEnd) {
+      this.gameService.endTurn();
+    } else {
+      // Zu früh beendet - Strafe!
+      this.gameService.endTurnTooEarly();
+    }
     this.selectedCard.set(null);
   }
 
   canEndTurn(): boolean {
     const human = this.humanPlayer();
-    if (!human || !human.isActive) return false;
-    
-    const state = this.gameState();
-    // Kann beendet werden wenn:
-    // 1. lastPlayerAction ist 'play' (Karte wurde gespielt, inkl. nach Farbwahl)
-    // 2. lastPlayerAction ist 'draw-complete' (alle Karten gezogen)
-    // 3. lastPlayerAction ist 'penalty-pickup' (Strafkarten aufgenommen)
-    return state.lastPlayerAction === 'play' ||
-           state.lastPlayerAction === 'draw-complete' ||
-           state.lastPlayerAction === 'penalty-pickup' ||
-           (human.drawnThisTurn > 0 && human.requiredDrawCount > 0 && human.drawnThisTurn >= human.requiredDrawCount);
+    // Button ist immer sichtbar wenn Spieler am Zug ist
+    return human?.isActive ?? false;
   }
 
   onSayMau(): void {

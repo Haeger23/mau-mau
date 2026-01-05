@@ -37,7 +37,9 @@ export class GameService {
     'QUEEN_END_FALSE': '§9.A DAMENRUNDE: Nur der Spieler, welcher die Damenrunde gestartet hat, darf das Ende der Damenrunde ausrufen.',
     'ACE_LAST_CARD': 'ASS-REGEL: Durch die Pflicht des Spielens, kann ein Spiel nicht mit einem Ass beendet werden.',
     'JACK_REPLICATION': '§7 BUBE: Bube auf Bube stinkt! Eine 10 die einen Buben repliziert, verletzt diese Regel.',
-    'SEVEN_ESCAPE': '§6 SIEBENER-KETTE: Ein Spieler kann einer Siebener-Strafe entkommen, indem er selbst eine 7 spielt. Alternativ kann auch eine 10 gespielt werden, die die 7 repliziert. Die Strafkarten akkumulieren sich dann (+2) und gehen an den nächsten Spieler weiter.'
+    'SEVEN_ESCAPE': '§6 SIEBENER-KETTE: Ein Spieler kann einer Siebener-Strafe entkommen, indem er selbst eine 7 spielt. Alternativ kann auch eine 10 gespielt werden, die die 7 repliziert. Die Strafkarten akkumulieren sich dann (+2) und gehen an den nächsten Spieler weiter.',
+    'INVALID_CARD_PLAYED': '§2 SPIELPFLICHT: Eine ungültige Karte wurde gespielt. Die Karte passt nicht auf die ausliegende Karte.',
+    'TURN_ENDED_TOO_EARLY': '§2 SPIELPFLICHT: Der Zug wurde vorzeitig beendet. Es fehlt noch eine Aktion (z.B. Karte spielen, Karten ziehen, Mau sagen).'
   };
 
   private createInitialState(): GameState {
@@ -1128,4 +1130,80 @@ export class GameService {
       currentPlayer.hasSaidMauMau = false;
     }
   }
+
+  // ========== UX: INVALID MOVES ==========
+
+  /**
+   * Spieler versucht eine ungültige Karte zu spielen
+   * Karte bleibt auf der Hand, Spieler bekommt Strafkarte
+   */
+  playInvalidCard(card: Card): void {
+    const state = this.gameState();
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    
+    this.addChatLog(
+      currentPlayer.name,
+      `versucht ${this.getCardDisplayName(card)} zu spielen - ungültiger Zug!`,
+      'penalty'
+    );
+    
+    this.assignPenaltyCards(
+      currentPlayer.id,
+      1,
+      'Ungültige Karte gespielt',
+      'INVALID_CARD_PLAYED'
+    );
+  }
+
+  /**
+   * Prüft ob der Zug jetzt beendet werden kann
+   * Wird vor endTurn() aufgerufen
+   */
+  canEndTurnNow(): boolean {
+    const state = this.gameState();
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    
+    // Zug kann beendet werden wenn:
+    // 1. lastPlayerAction ist 'play' (Karte wurde gespielt)
+    // 2. lastPlayerAction ist 'draw-complete' (alle Karten gezogen)
+    // 3. lastPlayerAction ist 'penalty-pickup' (Strafkarten aufgenommen)
+    return state.lastPlayerAction === 'play' ||
+           state.lastPlayerAction === 'draw-complete' ||
+           state.lastPlayerAction === 'penalty-pickup' ||
+           (currentPlayer.drawnThisTurn > 0 && 
+            currentPlayer.requiredDrawCount > 0 && 
+            currentPlayer.drawnThisTurn >= currentPlayer.requiredDrawCount);
+  }
+
+  /**
+   * Spieler versucht Zug zu früh zu beenden
+   * Bekommt Strafkarte und Zug wird NICHT beendet
+   */
+  endTurnTooEarly(): void {
+    const state = this.gameState();
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    
+    let reason = 'Zug vorzeitig beendet';
+    
+    // Gib spezifischen Grund
+    if (state.lastPlayerAction === null || state.lastPlayerAction === 'awaiting-draw') {
+      reason = 'Noch keine Aktion durchgeführt (Karte spielen oder ziehen)';
+    } else if (currentPlayer.requiredDrawCount > 0 && currentPlayer.drawnThisTurn < currentPlayer.requiredDrawCount) {
+      reason = `Zu wenig Karten gezogen (${currentPlayer.drawnThisTurn}/${currentPlayer.requiredDrawCount})`;
+    }
+    
+    this.addChatLog(
+      currentPlayer.name,
+      `versucht Zug zu beenden - ${reason}`,
+      'penalty'
+    );
+    
+    this.assignPenaltyCards(
+      currentPlayer.id,
+      1,
+      reason,
+      'TURN_ENDED_TOO_EARLY'
+    );
+  }
 }
+

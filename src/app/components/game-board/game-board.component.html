@@ -149,14 +149,12 @@
                   Damenrunde beenden
                 </button>
               }
-              @if (canEndTurn()) {
-                <button 
-                  class="action-btn end-turn-btn"
-                  data-testid="action-end-turn"
-                  (click)="onEndTurn()">
-                  Zug beenden
-                </button>
-              }
+              <button 
+                class="action-btn end-turn-btn"
+                data-testid="action-end-turn"
+                (click)="onEndTurn()">
+                Zug beenden
+              </button>
             </div>
           }
           
