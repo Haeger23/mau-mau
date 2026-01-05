@@ -169,6 +169,37 @@ describe('GameService', () => {
       expect(typeof initialPenalty).toBe('number');
       expect(initialPenalty >= 0).toBe(true);
     });
+
+    it('sollte Spieler mit 7 der Strafe entkommen lassen', () => {
+      service.startNewGame(['Spieler', 'Computer 1']);
+      const state = service.state();
+      
+      // Simuliere: Erste 7 wird gespielt
+      const sevenOfHearts: Card = { id: 'test-7h', rank: '7', suit: 'hearts' };
+      state.discardPile.push(sevenOfHearts);
+      state.lastPlayedCard = sevenOfHearts;
+      state.drawPenalty = 2;
+      
+      // Spieler hat eine 7 auf der Hand
+      const sevenOfDiamonds: Card = { id: 'test-7d', rank: '7', suit: 'diamonds' };
+      state.players[0].hand = [sevenOfDiamonds];
+      state.players[0].requiredDrawCount = 2; // Sollte ziehen
+      state.players[0].drawnThisTurn = 0;
+      
+      // Spieler kann die 7 spielen
+      expect(service.canPlayCard(sevenOfDiamonds)).toBe(true);
+      
+      // Spieler spielt die 7
+      service.playCard(sevenOfDiamonds);
+      
+      const newState = service.state();
+      // Strafe sollte erhöht sein (+2)
+      expect(newState.drawPenalty).toBe(4);
+      
+      // Spieler sollte der Strafe entkommen sein
+      expect(newState.players[0].requiredDrawCount).toBe(0);
+      expect(newState.players[0].drawnThisTurn).toBe(0);
+    });
   });
 
   describe('Kartenspielen - Ass-Regel', () => {
