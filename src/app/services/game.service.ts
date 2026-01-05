@@ -637,7 +637,10 @@ export class GameService {
         }
       } else {
         // Keine passende Karte, Zug endet
-        this.nextTurn();
+        // Für KI automatisch, für Menschen manuell
+        if (!currentPlayer.isHuman) {
+          this.nextTurn();
+        }
       }
     }
   }
