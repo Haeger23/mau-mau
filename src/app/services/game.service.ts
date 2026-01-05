@@ -37,7 +37,7 @@ export class GameService {
     'QUEEN_END_FALSE': '§9.A DAMENRUNDE: Nur der Spieler, welcher die Damenrunde gestartet hat, darf das Ende der Damenrunde ausrufen.',
     'ACE_LAST_CARD': 'ASS-REGEL: Durch die Pflicht des Spielens, kann ein Spiel nicht mit einem Ass beendet werden.',
     'JACK_REPLICATION': '§7 BUBE: Bube auf Bube stinkt! Eine 10 die einen Buben repliziert, verletzt diese Regel.',
-    'SEVEN_ESCAPE': '§6 SIEBENER-KETTE: Ein Spieler kann einer Siebener-Strafe entkommen, indem er selbst eine 7 spielt. Die Strafkarten akkumulieren sich dann (+2) und gehen an den nächsten Spieler weiter.'
+    'SEVEN_ESCAPE': '§6 SIEBENER-KETTE: Ein Spieler kann einer Siebener-Strafe entkommen, indem er selbst eine 7 spielt. Alternativ kann auch eine 10 gespielt werden, die die 7 repliziert. Die Strafkarten akkumulieren sich dann (+2) und gehen an den nächsten Spieler weiter.'
   };
 
   private createInitialState(): GameState {
@@ -268,10 +268,10 @@ export class GameService {
 
     if (!topCard) return false;
 
-    // Bei Strafkarten (7er): Nur weitere 7er können gelegt werden
+    // Bei Strafkarten (7er): Nur weitere 7er oder 10er (replizieren die 7) können gelegt werden
     // Diese Regel hat Vorrang vor allen anderen (auch vor Buben!)
     if (state.drawPenalty > 0) {
-      return card.rank === '7';
+      return card.rank === '7' || card.rank === '10';
     }
 
     // Damenrunde: Nur Damen oder 10er sind erlaubt
@@ -306,8 +306,8 @@ export class GameService {
     
     currentPlayer.hand.splice(cardIndex, 1);
     
-    // Wenn Spieler eine 7 spielt während drawPenalty aktiv: Er entkommt der Strafe
-    const isEscapingWith7 = card.rank === '7' && state.drawPenalty > 0;
+    // Wenn Spieler eine 7 oder 10 spielt während drawPenalty aktiv: Er entkommt der Strafe
+    const isEscapingWith7 = (card.rank === '7' || card.rank === '10') && state.drawPenalty > 0;
 
     // Reset chosenSuit wenn eine Karte gelegt wird (außer bei Bube)
     const hasJack = card.rank === 'J';
@@ -498,8 +498,16 @@ export class GameService {
           // Effekt der Karte darunter anwenden
           switch (cardBelow.rank) {
             case '7':
+              const wasEscapingWith10 = state.drawPenalty > 0;
               state.drawPenalty += 2;
-              this.addChatLog(currentPlayer.name, 'repliziert die 7 → +2 Strafkarten', 'play');
+              if (wasEscapingWith10) {
+                // 10 repliziert 7 während Strafe aktiv = Escape!
+                currentPlayer.requiredDrawCount = 0;
+                currentPlayer.drawnThisTurn = 0;
+                this.addChatLog(currentPlayer.name, `repliziert die 7 und entkommt der Strafe! → +2 für nächsten Spieler (total: ${state.drawPenalty})`, 'play');
+              } else {
+                this.addChatLog(currentPlayer.name, 'repliziert die 7 → +2 Strafkarten', 'play');
+              }
               break;
             
             case '8':
@@ -781,15 +789,22 @@ export class GameService {
     }
 
     // ========== SCHRITT 3: Spielbare Karten prüfen ==========
-    // Bei 7er-Strafe: Prüfe ob KI eine 7 zum Aussteigen hat
+    // Bei 7er-Strafe: Prüfe ob KI eine 7 oder 10 zum Aussteigen hat
     if (state.drawPenalty > 0) {
+      // Bevorzuge 7, dann 10 (10 könnte Bube replizieren)
       const seven = currentPlayer.hand.find(c => c.rank === '7');
+      const ten = currentPlayer.hand.find(c => c.rank === '10');
+      
       if (seven) {
         // KI spielt die 7 um der Strafe zu entkommen
         setTimeout(() => this.playCard(seven), 600);
         return;
+      } else if (ten) {
+        // KI spielt die 10 um der Strafe zu entkommen (repliziert die 7)
+        setTimeout(() => this.playCard(ten), 600);
+        return;
       }
-      // Keine 7 → KI muss Strafkarten ziehen
+      // Keine 7 oder 10 → KI muss Strafkarten ziehen
       setTimeout(() => this.aiDrawCards(), 600);
       return;
     }
