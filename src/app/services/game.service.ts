@@ -658,13 +658,23 @@ export class GameService {
         'DRAW_TOO_MANY'
       );
     }
+    
+    // Wenn Spieler die 7er-Strafe korrekt gezogen hat, reset drawPenalty
+    if (currentPlayer.requiredDrawCount > 0 && 
+        currentPlayer.drawnThisTurn === currentPlayer.requiredDrawCount &&
+        state.drawPenalty > 0) {
+      state.drawPenalty = 0;
+    }
 
     // Reset Counter
     currentPlayer.drawnThisTurn = 0;
     currentPlayer.requiredDrawCount = 0;
-    if (state.drawPenalty > 0) {
-      state.drawPenalty = 0;
-    }
+    
+    // drawPenalty darf NICHT hier zurückgesetzt werden!
+    // Es wird nur zurückgesetzt wenn:
+    // 1. Der Spieler die Strafe tatsächlich gezogen hat (siehe oben)
+    // 2. Der Spieler mit einer 7 entkommen ist (dann bleibt es erhöht)
+    // Wenn wir es hier zurücksetzen, kann der nächste Spieler die Strafe umgehen!
 
     this.gameState.set({ ...state });
 
@@ -841,6 +851,7 @@ export class GameService {
 
     // Berechne benötigte Anzahl
     const requiredCount = state.drawPenalty > 0 ? state.drawPenalty : 1;
+    const wasDrawPenalty = state.drawPenalty > 0;
 
     // Ziehe Karten einzeln
     const drawNext = (count: number) => {
@@ -848,7 +859,15 @@ export class GameService {
         this.drawCard();
         setTimeout(() => drawNext(count - 1), 300);
       } else {
-        // Alle Karten gezogen - beende Zug
+        // Alle Karten gezogen
+        // Wenn Strafkarten gezogen wurden, reset drawPenalty
+        if (wasDrawPenalty) {
+          const currentState = this.gameState();
+          currentState.drawPenalty = 0;
+          this.gameState.set({ ...currentState });
+        }
+        
+        // Beende Zug
         setTimeout(() => this.endTurn(), 500);
       }
     };
