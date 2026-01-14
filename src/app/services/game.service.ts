@@ -36,7 +36,7 @@ export class GameService {
     'QUEEN_END_MISSED': '§9.A DAMENRUNDE: Falls ein Spieler vergisst eine Damenrunde zu beenden, muss ebenfalls eine Strafkarte gezogen werden.',
     'QUEEN_END_FALSE': '§9.A DAMENRUNDE: Nur der Spieler, welcher die Damenrunde gestartet hat, darf das Ende der Damenrunde ausrufen.',
     'ACE_LAST_CARD': 'ASS-REGEL: Durch die Pflicht des Spielens, kann ein Spiel nicht mit einem Ass beendet werden.',
-    'JACK_REPLICATION': '§7 BUBE: Bube auf Bube stinkt! Eine 10 die einen Buben repliziert, verletzt diese Regel.',
+    'JACK_REPLICATION': '§7 BUBE: Bube auf Bube geht nicht! Eine 10 die einen Buben repliziert, verletzt diese Regel.',
     'SEVEN_ESCAPE': '§6 SIEBENER-KETTE: Ein Spieler kann einer Siebener-Strafe entkommen, indem er selbst eine 7 spielt. Alternativ kann auch eine 10 gespielt werden, die die 7 repliziert. Die Strafkarten akkumulieren sich dann (+2) und gehen an den nächsten Spieler weiter.',
     'INVALID_CARD_PLAYED': '§2 SPIELPFLICHT: Eine ungültige Karte wurde gespielt. Die Karte passt nicht auf die ausliegende Karte.',
     'TURN_ENDED_TOO_EARLY': '§2 SPIELPFLICHT: Der Zug wurde vorzeitig beendet. Es fehlt noch eine Aktion (z.B. Karte spielen, Karten ziehen, Mau sagen).'
@@ -58,23 +58,49 @@ export class GameService {
       chatLog: [],
       lastPlayerAction: null,
       queenRoundActive: false,
-      queenRoundStarterId: null
+      queenRoundStarterId: null,
+      queenRoundNeedsFirstQueen: false,
+      nineBaseActive: false,
+      nineBaseSuit: null,
+      nineBasePlayerId: null
     };
   }
 
-  private getRandomComputerNames(count: number): string[] {
-    const availableNames = ['Lina', 'Robert', 'Titus', 'Fischi', 'Manu', 'Ole', 'Willi', 'Lukas', 'Hans'];
-    const shuffled = [...availableNames].sort(() => this.rng.next() - 0.5);
-    return shuffled.slice(0, count);
+  getAvailablePlayerNames(): Array<{name: string, image: string}> {
+    return [
+      { name: 'Hans', image: '/images/players/hans.webp' },
+      { name: 'Lina', image: '/images/players/lina.webp' },
+      { name: 'Lukas', image: '/images/players/lukas.webp' },
+      { name: 'Manu', image: '/images/players/manuel.webp' },
+      { name: 'Max', image: '/images/players/max.webp' },
+      { name: 'Ole', image: '/images/players/ole.webp' },
+      { name: 'Robert', image: '/images/players/robert.webp' },
+      { name: 'Sebastian', image: '/images/players/sebastian.webp' },
+      { name: 'Titus', image: '/images/players/titus.webp' },
+      { name: 'Willi', image: '/images/players/willi.webp' }
+    ];
+  }
+
+  private getRandomComputerNames(count: number, excludeName?: string): string[] {
+    let availablePlayers = this.getAvailablePlayerNames();
+    
+    // Entferne gewählten Spielernamen aus der Liste
+    if (excludeName) {
+      availablePlayers = availablePlayers.filter(player => player.name.toLowerCase() !== excludeName.toLowerCase());
+    }
+    
+    const shuffled = [...availablePlayers].sort(() => this.rng.next() - 0.5);
+    return shuffled.slice(0, count).map(player => player.name);
   }
 
   startNewGame(playerNames: string[] = ['Du', 'Computer 1', 'Computer 2']): void {
     const deck = this.createDeck();
     this.shuffleDeck(deck);
 
-    // Ersetze Computer-Namen durch zufällige Namen
-    const computerCount = playerNames.length - 1; // Alle außer "Du"
-    const randomNames = this.getRandomComputerNames(computerCount);
+    // Ersetze Computer-Namen durch zufällige Namen (ohne den Spielernamen)
+    const playerName = playerNames[0];
+    const computerCount = playerNames.length - 1; // Alle außer Spieler
+    const randomNames = this.getRandomComputerNames(computerCount, playerName);
     const finalNames = playerNames.map((name, index) => 
       index === 0 ? name : randomNames[index - 1] || name
     );
@@ -126,7 +152,11 @@ export class GameService {
       }],
       lastPlayerAction: null,
       queenRoundActive: false,
-      queenRoundStarterId: null
+      queenRoundStarterId: null,
+      queenRoundNeedsFirstQueen: false,
+      nineBaseActive: false,
+      nineBaseSuit: null,
+      nineBasePlayerId: null
     });
   }
 
@@ -270,6 +300,11 @@ export class GameService {
 
     if (!topCard) return false;
 
+    // Aktive 9er-Basis-Kette: aktueller Spieler darf beliebig viele Karten derselben Farbe legen
+    if (state.nineBaseActive && state.nineBasePlayerId === state.players[state.currentPlayerIndex].id) {
+      return card.suit === state.nineBaseSuit;
+    }
+
     // Bei Strafkarten (7er): Nur weitere 7er oder 10er (replizieren die 7) können gelegt werden
     // Diese Regel hat Vorrang vor allen anderen (auch vor Buben!)
     if (state.drawPenalty > 0) {
@@ -286,8 +321,19 @@ export class GameService {
       return false;
     }
 
+    // 10er-Replikator: 10 kann IMMER gespielt werden (repliziert die ausliegende Karte)
+    // Ausnahme: Nicht auf Bube (siehe oben) und nicht bei Strafkarten/Damenrunde (siehe oben)
+    if (card.rank === '10') return true;
+
     // Bube kann auf alles gelegt werden (außer auf einen anderen Buben und bei Strafkarten)
     if (card.rank === 'J') return true;
+
+    // WICHTIG: Wenn die oberste Karte eine 10 ist, repliziert sie die Karte darunter
+    // Also müssen wir gegen die Karte darunter prüfen, nicht gegen die 10
+    let cardToMatch = topCard;
+    if (topCard.rank === '10' && state.discardPile.length >= 2) {
+      cardToMatch = state.discardPile[state.discardPile.length - 2];
+    }
 
     // Nach einem Buben: Nur Karten der gewählten Farbe
     if (state.chosenSuit) {
@@ -295,18 +341,183 @@ export class GameService {
     }
 
     // Standard: Farbe oder Wert muss übereinstimmen
-    return card.suit === topCard.suit || card.rank === topCard.rank;
+    return card.suit === cardToMatch.suit || card.rank === cardToMatch.rank;
   }
 
-  playCard(card: Card, additionalCard?: Card): void {
+  playCard(card: Card, additionalCard?: Card | Card[]): void {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
+    
+    // DAMENRUNDE REGEL: Nach Ankündigung MUSS erste Karte Dame oder 10 sein
+    // (10 kann jede Karte replizieren, also auch eine Dame)
+    if (state.queenRoundNeedsFirstQueen && currentPlayer.isQueenRoundStarter) {
+      if (card.rank !== 'Q' && card.rank !== '10') {
+        // Karte zurück auf die Hand
+        this.assignPenaltyCards(
+          currentPlayer.id,
+          1,
+          'Damenrunde angekündigt, aber keine Dame gespielt',
+          'QUEEN_NOT_PLAYED'
+        );
+        // Damenrunde abbrechen
+        state.queenRoundActive = false;
+        state.queenRoundStarterId = null;
+        state.queenRoundNeedsFirstQueen = false;
+        currentPlayer.inQueenRound = false;
+        currentPlayer.isQueenRoundStarter = false;
+        this.gameState.set({ ...state });
+        return;
+      }
+      // Dame oder 10 wurde gespielt - Flag zurücksetzen
+      state.queenRoundNeedsFirstQueen = false;
+    }
     
     // Remove card from player's hand
     const cardIndex = currentPlayer.hand.findIndex(c => c.id === card.id);
     if (cardIndex === -1) return;
     
     currentPlayer.hand.splice(cardIndex, 1);
+
+    // Aktive 9er-Basis-Kette: gleiche Farbe erlaubt, Effekt verzögert bis Zugende
+    if (state.nineBaseActive && state.nineBasePlayerId === currentPlayer.id) {
+      if (card.suit !== state.nineBaseSuit) {
+        // Ungültig: andere Farbe während 9er-Kette
+        currentPlayer.hand.push(card);
+        this.assignPenaltyCards(
+          currentPlayer.id,
+          1,
+          '9er-Basis: Nur Karten der gleichen Farbe erlaubt',
+          'NINE_INVALID_SUIT'
+        );
+        this.gameState.set({ ...state });
+        return;
+      }
+
+      // Karte ablegen, Effekt NICHT anwenden (wird beim Zugende angewendet)
+      state.discardPile.push(card);
+      state.lastPlayedCard = card;
+      state.lastPlayerAction = 'play';
+      this.addChatLog(currentPlayer.name, `spielt ${this.getCardDisplayName(card)}`, 'play');
+      this.gameState.set({ ...state });
+      return;
+    }
+    
+    // 9ER BASISKARTE: Mehrere Karten gleicher Farbe können zusammen gespielt werden
+    if (card.rank === '9' && additionalCard) {
+      const additionalCards = Array.isArray(additionalCard) ? additionalCard : [additionalCard];
+      
+      // Validiere: Alle zusätzlichen Karten müssen die gleiche Farbe wie die 9 haben
+      const allSameSuit = additionalCards.every(c => c.suit === card.suit);
+      
+      if (!allSameSuit) {
+        // Ungültige Kombination - Karte zurück, Strafe
+        currentPlayer.hand.push(card);
+        this.assignPenaltyCards(
+          currentPlayer.id,
+          1,
+          '9er-Basis: Nicht alle Karten haben die gleiche Farbe',
+          'NINE_INVALID_SUIT'
+        );
+        this.gameState.set({ ...state });
+        return;
+      }
+      
+      // Entferne alle zusätzlichen Karten von der Hand
+      additionalCards.forEach(addCard => {
+        const idx = currentPlayer.hand.findIndex(c => c.id === addCard.id);
+        if (idx !== -1) {
+          currentPlayer.hand.splice(idx, 1);
+        }
+      });
+      
+      // Lege die 9 zuerst ab
+      state.discardPile.push(card);
+      
+      // Dann alle zusätzlichen Karten
+      additionalCards.forEach(addCard => {
+        state.discardPile.push(addCard);
+      });
+      
+      // Die oberste Karte ist relevant für den nächsten Spieler
+      const topCard = additionalCards[additionalCards.length - 1];
+      state.lastPlayedCard = topCard;
+      state.lastPlayerAction = 'play';
+      
+      const cardsPlayed = additionalCards.length + 1;
+      this.addChatLog(
+        currentPlayer.name,
+        `spielt ${cardsPlayed} Karten mit 9er-Basis (oberste: ${this.getCardDisplayName(topCard)})`,
+        'play'
+      );
+      
+      // State MUSS gesetzt werden BEVOR applyCardEffect aufgerufen wird
+      this.gameState.set({ ...state });
+      
+      // Wende den Effekt der OBERSTEN Karte an (nicht der 9)
+      this.applyCardEffect(topCard);
+      
+      // State nach Effekt holen
+      const stateAfterEffect = this.gameState();
+      const currentPlayerAfter = stateAfterEffect.players[stateAfterEffect.currentPlayerIndex];
+      
+      // Check for win condition
+      if (currentPlayerAfter.hand.length === 0) {
+        const wasJack = topCard.rank === 'J';
+        
+        if (wasJack) {
+          // Letzte Karte war Bube: auf "Mau-Mau" warten, Spiel noch nicht beenden
+          this.addChatLog(currentPlayerAfter.name, 'letzte Karte war Bube – warte auf "Mau-Mau"', 'mau-mau');
+          this.gameState.set({ ...stateAfterEffect });
+          return;
+        }
+
+        const updatedState = this.gameState();
+        updatedState.gameOver = true;
+        updatedState.winner = currentPlayerAfter;
+        this.addChatLog(currentPlayerAfter.name, `hat gewonnen! 🎉`, 'win');
+        this.gameState.set({ ...updatedState });
+        return;
+      }
+
+      // Mau-Ansage nicht sofort prüfen – erst beim Zugende
+      
+      // DAMENRUNDE: Prüfe ob Starter vergessen hat zu beenden
+      const finalState = this.gameState();
+      const finalPlayer = finalState.players[finalState.currentPlayerIndex];
+      if (finalState.queenRoundActive && finalPlayer.isQueenRoundStarter && topCard.rank !== 'Q' && topCard.rank !== '10') {
+        this.assignPenaltyCards(
+          finalPlayer.id,
+          1,
+          'Damenrunde nicht beendet (keine Dame mehr gespielt)',
+          'QUEEN_FORGOT_TO_END'
+        );
+        
+        finalState.queenRoundActive = false;
+        finalState.queenRoundStarterId = null;
+        finalState.queenRoundNeedsFirstQueen = false;
+        
+        finalState.players.forEach(p => {
+          p.inQueenRound = false;
+          p.isQueenRoundStarter = false;
+        });
+        
+        this.addChatLog(
+          finalPlayer.name,
+          'hat Damenrunde nicht beendet - automatisch beendet',
+          'queen-round-end',
+          'QUEEN_ROUND_AUTO_ENDED'
+        );
+        
+        this.gameState.set({ ...finalState });
+      }
+      
+      // Zug beenden
+      if (!currentPlayerAfter.isHuman) {
+        this.nextTurn();
+      }
+      
+      return;
+    }
     
     // Wenn Spieler eine 7 oder 10 spielt während drawPenalty aktiv: Er entkommt der Strafe
     const isEscapingWith7 = (card.rank === '7' || card.rank === '10') && state.drawPenalty > 0;
@@ -355,22 +566,33 @@ export class GameService {
     
     // Log nur wenn nicht 7er-Escape (wird in applyCardEffect geloggt)
     if (!isEscapingWith7) {
-      this.addChatLog(currentPlayer.name, `spielt ${this.getCardDisplayName(card)}`, 'play');
+      // Bei 8er: Kombiniere mit Skip-Info
+      if (card.rank === '8') {
+        const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+        const nextPlayer = state.players[nextPlayerIndex];
+        this.addChatLog(currentPlayer.name, `spielt ${this.getCardDisplayName(card)}, ${nextPlayer.name} setzt aus`, 'skip');
+      } else {
+        this.addChatLog(currentPlayer.name, `spielt ${this.getCardDisplayName(card)}`, 'play');
+      }
+    }
+    // Wenn 9 alleine gespielt wurde: starte 9er-Basis-Kette
+    if (card.rank === '9' && !additionalCard) {
+      state.nineBaseActive = true;
+      state.nineBaseSuit = card.suit;
+      state.nineBasePlayerId = currentPlayer.id;
+      // State früh committen, damit nach playCard() sofort sichtbar
+      this.gameState.set({ ...state });
     }
     
     this.applyCardEffect(card);
 
     // Check for win condition
     if (currentPlayer.hand.length === 0) {
-      // Prüfe Mau-Mau Ansage
-      if (!currentPlayer.hasSaidMauMau) {
-        this.assignPenaltyCards(
-          currentPlayer.id,
-          1,
-          'Mau-Mau nicht gesagt',
-          'MAUMAU_MISSED'
-        );
-        // Win verhindert - Spieler muss Strafe aufnehmen
+      const wasJack = card.rank === 'J';
+      
+      if (wasJack) {
+        // Letzte Karte war Bube: auf "Mau-Mau" warten, Spiel noch nicht beenden
+        this.addChatLog(currentPlayer.name, 'letzte Karte war Bube – warte auf "Mau-Mau"', 'mau-mau');
         this.gameState.set({ ...state });
         return;
       }
@@ -382,30 +604,35 @@ export class GameService {
       return;
     }
 
-    // Prüfe Mau-Ansage nach Karte legen
-    this.checkMauPenalty();
-    this.checkMauMauPenalty();
+    // Mau-Ansage nicht sofort prüfen – erst beim Zugende
 
-    // Prüfe ob Damenrunde automatisch beendet werden sollte
-    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter) {
-      const queenCount = currentPlayer.hand.filter(c => c.rank === 'Q').length;
-      if (queenCount === 0) {
-        // Starter hat alle Damen gespielt - Auto-Beendigung
-        state.queenRoundActive = false;
-        state.queenRoundStarterId = null;
-        
-        state.players.forEach(p => {
-          p.inQueenRound = false;
-          p.isQueenRoundStarter = false;
-        });
-
-        this.addChatLog(
-          currentPlayer.name,
-          'beendet die Damenrunde automatisch',
-          'queen-round-end',
-          'QUEEN_ROUND_ENDED'
-        );
-      }
+    // DAMENRUNDE: Prüfe ob Starter vergessen hat zu beenden
+    // Wenn Starter eine Nicht-Dame spielt während Damenrunde aktiv -> Auto-Ende + Strafe
+    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter && card.rank !== 'Q' && card.rank !== '10') {
+      // Starter hat keine Dame mehr gespielt -> Damenrunde automatisch beenden + Strafe
+      this.assignPenaltyCards(
+        currentPlayer.id,
+        1,
+        'Damenrunde nicht beendet (keine Dame mehr gespielt)',
+        'QUEEN_FORGOT_TO_END'
+      );
+      
+      // Damenrunde beenden
+      state.queenRoundActive = false;
+      state.queenRoundStarterId = null;
+      state.queenRoundNeedsFirstQueen = false;
+      
+      state.players.forEach(p => {
+        p.inQueenRound = false;
+        p.isQueenRoundStarter = false;
+      });
+      
+      this.addChatLog(
+        currentPlayer.name,
+        'hat Damenrunde nicht beendet - automatisch beendet',
+        'queen-round-end',
+        'QUEEN_ROUND_AUTO_ENDED'
+      );
     }
 
     // If Jack was played, don't proceed to next turn
@@ -464,7 +691,15 @@ export class GameService {
       case '8':
         // Nächster Spieler wird übersprungen
         state.skipNext = true;
-        this.addChatLog(currentPlayer.name, 'lässt den nächsten Spieler aussetzen', 'skip');
+        // Ermittle den Namen des nächsten Spielers
+        const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+        const nextPlayer = state.players[nextPlayerIndex];
+        // Kein separater Log - wird beim playCard combined
+        break;
+
+      case '9':
+        // 9er Basiskarte: Wird in playCard() durch additionalCard Parameter behandelt
+        // Wenn die 9 alleine gespielt wird, hat sie keinen speziellen Effekt
         break;
 
       case '10':
@@ -514,7 +749,7 @@ export class GameService {
             
             case '8':
               state.skipNext = true;
-              this.addChatLog(currentPlayer.name, 'repliziert die 8 → nächster Spieler überspringen', 'skip');
+              // Kein separater Log - wird kombiniert angezeigt
               break;
             
             case 'Q':
@@ -615,7 +850,10 @@ export class GameService {
 
     // Prüfe ob genug gezogen wurde
     if (currentPlayer.requiredDrawCount > 0 && currentPlayer.drawnThisTurn >= currentPlayer.requiredDrawCount) {
+      // Ziehpflicht erfüllt: Zug bleibt beim Spieler, Beschränkung fällt weg
       state.lastPlayerAction = 'draw-complete';
+      state.drawPenalty = 0; // Beschränkung (nur 7/10) sofort aufheben
+      currentPlayer.requiredDrawCount = 0; // Weitere Logik soll wie normales Ziehen reagieren
       this.addChatLog(
         currentPlayer.name,
         `hat ${currentPlayer.drawnThisTurn} Karte(n) gezogen`,
@@ -651,25 +889,39 @@ export class GameService {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
 
-    // Prüfe Zieh-Counter
-    const diff = currentPlayer.drawnThisTurn - currentPlayer.requiredDrawCount;
+    // 9er-Basis-Kette: Wende Effekt der obersten Karte zuerst an und beende die Kette
+    if (state.nineBaseActive && state.nineBasePlayerId === currentPlayer.id) {
+      const topCard = state.discardPile[state.discardPile.length - 1];
+      if (topCard) {
+        this.applyCardEffect(topCard);
+      }
+      state.nineBaseActive = false;
+      state.nineBaseSuit = null;
+      state.nineBasePlayerId = null;
+      this.gameState.set({ ...state });
+    }
 
-    if (diff < 0) {
-      // Zu wenig gezogen
-      this.assignPenaltyCards(
-        currentPlayer.id,
-        Math.abs(diff),
-        `zu wenig gezogen (${currentPlayer.drawnThisTurn}/${currentPlayer.requiredDrawCount})`,
-        'DRAW_TOO_FEW'
-      );
-    } else if (diff > 0) {
-      // Zu viel gezogen
-      this.assignPenaltyCards(
-        currentPlayer.id,
-        diff,
-        `zu viel gezogen (${currentPlayer.drawnThisTurn}/${currentPlayer.requiredDrawCount})`,
-        'DRAW_TOO_MANY'
-      );
+    // Prüfe Zieh-Counter nur wenn eine Ziehpflicht bestand
+    if (currentPlayer.requiredDrawCount > 0) {
+      const diff = currentPlayer.drawnThisTurn - currentPlayer.requiredDrawCount;
+
+      if (diff < 0) {
+        // Zu wenig gezogen
+        this.assignPenaltyCards(
+          currentPlayer.id,
+          Math.abs(diff),
+          `zu wenig gezogen (${currentPlayer.drawnThisTurn}/${currentPlayer.requiredDrawCount})`,
+          'DRAW_TOO_FEW'
+        );
+      } else if (diff > 0) {
+        // Zu viel gezogen
+        this.assignPenaltyCards(
+          currentPlayer.id,
+          diff,
+          `zu viel gezogen (${currentPlayer.drawnThisTurn}/${currentPlayer.requiredDrawCount})`,
+          'DRAW_TOO_MANY'
+        );
+      }
     }
     
     // Wenn Spieler die 7er-Strafe korrekt gezogen hat, reset drawPenalty
@@ -693,7 +945,20 @@ export class GameService {
 
     // Prüfe Mau-Penalty
     this.checkMauPenalty();
-    this.checkMauMauPenalty();
+
+    // Prüfe Mau-Mau: Wenn Hand leer und letzte Karte war Bube, aber keine Ansage
+    const lastCard = state.discardPile[state.discardPile.length - 1];
+    const wasJack = lastCard && lastCard.rank === 'J';
+    if (currentPlayer.hand.length === 0 && wasJack && !currentPlayer.hasSaidMauMau) {
+      this.assignPenaltyCards(
+        currentPlayer.id,
+        1,
+        'Mau-Mau nicht gesagt (letzte Karte war Bube)',
+        'MAUMAU_MISSED'
+      );
+      // Kein Sieg – durch Strafe wieder Karten auf der Hand
+      this.gameState.set({ ...state });
+    }
 
     // Nächster Spieler
     this.nextTurn();
@@ -777,20 +1042,32 @@ export class GameService {
       setTimeout(() => this.sayMau(), 300);
     }
 
-    // Prüfe "Mau-Mau" (90% Chance bei 1 Karte)
-    if (currentPlayer.hand.length === 1 && !currentPlayer.hasSaidMauMau && this.rng.next() < 0.9) {
+    // Prüfe "Mau-Mau" (90% Chance) NUR wenn Hand leer ist und letzte Karte ein Bube war
+    const lastCard = state.discardPile[state.discardPile.length - 1];
+    if (currentPlayer.hand.length === 0 && lastCard && lastCard.rank === 'J' && !currentPlayer.hasSaidMauMau && this.rng.next() < 0.9) {
       setTimeout(() => this.sayMauMau(), 300);
     }
 
-    // Prüfe Damenrunde ankündigen (50% Chance bei 2+ Damen)
+    // Prüfe Damenrunde ankündigen (50% Chance bei 2+ Damen) – aber nie während einer aktiven Ziehpflicht
     const queenCount = currentPlayer.hand.filter(c => c.rank === 'Q').length;
-    if (queenCount >= 2 && !state.queenRoundActive && this.rng.next() < 0.5) {
+    if (queenCount >= 2 && !state.queenRoundActive && state.drawPenalty === 0 && this.rng.next() < 0.5) {
+      // Erst ankündigen, dann erneut überlegen was zu spielen ist
       setTimeout(() => this.announceQueenRound(), 400);
+      // Nach der Ankündigung kurz warten und erneut AI-Entscheidung treffen,
+      // damit die erste Karte sicher Dame oder 10 wird
+      setTimeout(() => this.aiPlay(), 600);
+      return;
     }
 
-    // Prüfe Damenrunde beenden (30% Chance wenn keine Damen mehr)
-    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter && queenCount === 0 && this.rng.next() < 0.3) {
-      setTimeout(() => this.endQueenRound(), 400);
+    // Prüfe Damenrunde beenden (wenn Starter und letzte Karte war Dame)
+    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter) {
+      const lastCard = state.discardPile[state.discardPile.length - 1];
+      const lastWasQueen = lastCard && lastCard.rank === 'Q';
+      
+      // KI beendet Damenrunde nach dem Spielen einer Dame (80% Chance)
+      if (lastWasQueen && this.rng.next() < 0.8) {
+        setTimeout(() => this.endQueenRound(), 400);
+      }
     }
 
     // ========== SCHRITT 3: Spielbare Karten prüfen ==========
@@ -818,8 +1095,21 @@ export class GameService {
     const playableCards = currentPlayer.hand.filter(card => this.canPlayCard(card));
 
     if (playableCards.length > 0) {
-      // Für den Computer: Wähle die erste spielbare Karte.
-      const cardToPlay = playableCards[0];
+      let cardToPlay = playableCards[0];
+      
+      // DAMENRUNDE STRATEGIE: KI bevorzugt 10er (60% Chance) um Damenrunde zu verlängern
+      if (state.queenRoundActive) {
+        const queens = playableCards.filter(c => c.rank === 'Q');
+        const tens = playableCards.filter(c => c.rank === '10');
+        
+        // 60% Chance: KI spielt 10 statt Dame (wenn verfügbar)
+        if (tens.length > 0 && this.rng.next() < 0.6) {
+          cardToPlay = tens[0];
+        } else if (queens.length > 0) {
+          // 40% Chance oder keine 10: spiele Dame
+          cardToPlay = queens[0];
+        }
+      }
       
       // Schweizer Ass-Regel: Prüfe ob Ass die letzte Karte wäre
       if (cardToPlay.rank === 'A' && currentPlayer.hand.length === 1) {
@@ -916,7 +1206,7 @@ export class GameService {
   // Diese 4 Methoden können jederzeit vom Spieler aufgerufen werden
 
   /**
-   * §9.A: "Mau"-Ansage wenn noch 2 Karten auf der Hand
+   * §9.A: "Mau"-Ansage wenn noch 1 Karte auf der Hand
    * Falsch-Ansage: +1 Strafkarte
    */
   sayMau(): void {
@@ -945,7 +1235,8 @@ export class GameService {
   }
 
   /**
-   * §10.A: "Mau-Mau"-Ansage wenn noch 1 Karte auf der Hand
+   * §10.A: "Mau-Mau"-Ansage NUR wenn letzte Karte ein Bube war
+   * Darf NICHT gesagt werden wenn letzte Karte kein Bube ist
    * Falsch-Ansage: +1 Strafkarte
    */
   sayMauMau(): void {
@@ -957,17 +1248,31 @@ export class GameService {
       return;
     }
 
-    // Prüfe ob Ansage korrekt ist (genau 1 Karte)
-    if (currentPlayer.hand.length === 1) {
+    // Prüfe: Nur erlaubt wenn Hand leer UND letzte gespielte Karte war Bube
+    const lastCard = state.discardPile[state.discardPile.length - 1];
+    const wasJack = lastCard && lastCard.rank === 'J';
+    
+    if (currentPlayer.hand.length === 0 && wasJack) {
+      // Korrekt: Hand leer und Bube als letzte Karte
       currentPlayer.hasSaidMauMau = true;
       this.addChatLog(currentPlayer.name, 'sagt "Mau-Mau"', 'mau-mau', 'MAUMAU_SAID');
+      // Jetzt Sieg auslösen
+      state.gameOver = true;
+      state.winner = currentPlayer;
+      this.addChatLog(currentPlayer.name, `hat gewonnen! 🎉`, 'win');
       this.gameState.set({ ...state });
     } else {
       // Falsch-Ansage: +1 Strafkarte
+      let reason = '';
+      if (currentPlayer.hand.length > 0) {
+        reason = `Hand nicht leer (${currentPlayer.hand.length} Karte(n))`;
+      } else if (!wasJack) {
+        reason = 'Letzte Karte war kein Bube';
+      }
       this.assignPenaltyCards(
         currentPlayer.id,
         1,
-        `"Mau-Mau" falsch gesagt (${currentPlayer.hand.length} Karte(n) statt 1)`,
+        `"Mau-Mau" falsch gesagt: ${reason}`,
         'MAUMAU_FALSE'
       );
     }
@@ -982,9 +1287,15 @@ export class GameService {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
 
-    // Wenn bereits eine Damenrunde aktiv ist - ignoriere
+    // Wenn bereits eine Damenrunde aktiv ist
     if (state.queenRoundActive) {
-      this.addChatLog(currentPlayer.name, 'kann keine neue Damenrunde starten - bereits aktiv', 'play');
+      this.addChatLog(currentPlayer.name, 'versucht Damenrunde zu starten - bereits aktiv!', 'penalty');
+      this.assignPenaltyCards(
+        currentPlayer.id,
+        1,
+        'Damenrunde bereits aktiv',
+        'QUEEN_FALSE'
+      );
       return;
     }
 
@@ -995,6 +1306,7 @@ export class GameService {
       // Korrekte Ansage
       state.queenRoundActive = true;
       state.queenRoundStarterId = currentPlayer.id;
+      state.queenRoundNeedsFirstQueen = true; // Nächste Karte MUSS Dame sein
       currentPlayer.inQueenRound = true;
       currentPlayer.isQueenRoundStarter = true;
       
@@ -1006,12 +1318,12 @@ export class GameService {
       );
       this.gameState.set({ ...state });
     } else {
-      // Falsch-Ansage: +2 Strafkarten
+      // Falsch-Ansage: +1 Strafkarte (nicht +2, da Button immer klickbar)
       this.assignPenaltyCards(
         currentPlayer.id,
-        2,
+        1,
         `Damenrunde falsch angekündigt (nur ${queenCount} Dame(n) statt mind. 2)`,
-        'QUEEN_ROUND_FALSE'
+        'QUEEN_FALSE'
       );
     }
   }
@@ -1019,7 +1331,8 @@ export class GameService {
   /**
    * Damenrunde beenden
    * Nur der Starter kann beenden
-   * Falsch-Ansage wenn noch Damen auf der Hand: +2 Strafkarten
+   * Regel: Muss mit Dame begonnen UND mit Dame beendet werden
+   * (Spieler entscheidet selbst, wieviele Damen/10er er zwischendurch spielt)
    */
   endQueenRound(): void {
     const state = this.gameState();
@@ -1027,7 +1340,13 @@ export class GameService {
 
     // Prüfe ob überhaupt eine Damenrunde aktiv ist
     if (!state.queenRoundActive) {
-      this.addChatLog(currentPlayer.name, 'kann keine Damenrunde beenden - keine aktiv', 'play');
+      this.addChatLog(currentPlayer.name, 'versucht Damenrunde zu beenden - keine aktiv!', 'penalty');
+      this.assignPenaltyCards(
+        currentPlayer.id,
+        1,
+        'Keine aktive Damenrunde',
+        'QUEEN_END_FALSE'
+      );
       return;
     }
 
@@ -1035,19 +1354,27 @@ export class GameService {
     if (!currentPlayer.isQueenRoundStarter) {
       this.addChatLog(
         currentPlayer.name, 
-        'kann Damenrunde nicht beenden - nur der Starter darf das', 
-        'play'
+        'versucht Damenrunde zu beenden - nur Starter darf das!', 
+        'penalty'
+      );
+      this.assignPenaltyCards(
+        currentPlayer.id,
+        1,
+        'Nur Starter darf Damenrunde beenden',
+        'QUEEN_END_FALSE'
       );
       return;
     }
 
-    // Prüfe ob noch Damen auf der Hand sind
-    const queenCount = currentPlayer.hand.filter(c => c.rank === 'Q').length;
+    // Prüfe ob die letzte gespielte Karte eine Dame war
+    const lastPlayedCard = state.discardPile[state.discardPile.length - 1];
+    const endedWithQueen = lastPlayedCard && lastPlayedCard.rank === 'Q';
 
-    if (queenCount === 0) {
-      // Korrekt beendet
+    if (endedWithQueen) {
+      // Korrekt beendet: mit Dame begonnen UND mit Dame beendet
       state.queenRoundActive = false;
       state.queenRoundStarterId = null;
+      state.queenRoundNeedsFirstQueen = false;
       
       // Alle Spieler aus der Damenrunde entfernen
       state.players.forEach(p => {
@@ -1063,12 +1390,12 @@ export class GameService {
       );
       this.gameState.set({ ...state });
     } else {
-      // Falsch beendet: noch Damen auf Hand -> +2 Strafkarten
+      // Falsch beendet: letzte Karte war keine Dame -> +1 Strafkarte
       this.assignPenaltyCards(
         currentPlayer.id,
-        2,
-        `Damenrunde falsch beendet (noch ${queenCount} Dame(n) auf Hand)`,
-        'QUEEN_ROUND_END_FALSE'
+        1,
+        'Damenrunde muss mit einer Dame beendet werden',
+        'QUEEN_END_FALSE'
       );
     }
   }
@@ -1078,6 +1405,7 @@ export class GameService {
   /**
    * §9.B: Prüft ob "Mau" gesagt werden musste
    * Wird aufgerufen nach playCard() und endTurn()
+   * REGEL: "Mau" bei 1 Karte übrig
    */
   private checkMauPenalty(): void {
     const state = this.gameState();
@@ -1103,33 +1431,7 @@ export class GameService {
     }
   }
 
-  /**
-   * §10.B: Prüft ob "Mau-Mau" gesagt werden musste
-   * Wird aufgerufen nach playCard() und endTurn()
-   */
-  private checkMauMauPenalty(): void {
-    const state = this.gameState();
-    const currentPlayer = state.players[state.currentPlayerIndex];
 
-    // Prüfe ob Spieler jetzt genau 1 Karte hat
-    if (currentPlayer.hand.length === 1) {
-      // Wurde "Mau-Mau" gesagt?
-      if (!currentPlayer.hasSaidMauMau) {
-        // Strafe: +1 Karte für vergessene Ansage
-        this.assignPenaltyCards(
-          currentPlayer.id,
-          1,
-          '"Mau-Mau" vergessen zu sagen',
-          'MAUMAU_MISSED'
-        );
-      }
-    }
-
-    // Wenn mehr als 1 Karte: Reset Mau-Mau-Flag
-    if (currentPlayer.hand.length > 1) {
-      currentPlayer.hasSaidMauMau = false;
-    }
-  }
 
   // ========== UX: INVALID MOVES ==========
 

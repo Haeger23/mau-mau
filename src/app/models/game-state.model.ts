@@ -28,6 +28,11 @@ export interface GameState {
   // Schweizer Mau-Mau: Damenrunde
   queenRoundActive: boolean;
   queenRoundStarterId: string | null;
+  queenRoundNeedsFirstQueen: boolean; // Nach Ankündigung: erste Karte MUSS Dame sein
+  // 9er-Basis: sequentielles Ablegen gleicher Farbe in einem Zug
+  nineBaseActive: boolean;
+  nineBaseSuit: Suit | null;
+  nineBasePlayerId: string | null;
 }
 
 export type GameAction = 

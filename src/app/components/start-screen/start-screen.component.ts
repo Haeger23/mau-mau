@@ -1,5 +1,6 @@
-import { Component, output, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, output, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { GameService } from '../../services/game.service';
 
 export interface GameSetup {
   playerName: string;
@@ -19,15 +20,61 @@ export interface GameSetup {
         <div class="setup-form">
           <div class="form-group">
             <label for="playerName">Dein Name:</label>
-            <input 
-              id="playerName"
-              type="text" 
-              data-testid="input-player-name"
-              [(ngModel)]="playerName"
-              (keyup.enter)="startGame()"
-              placeholder="Gib deinen Namen ein..."
-              maxlength="20"
-              class="name-input">
+            <div class="name-avatar-container">
+              <div class="player-avatar">
+                @if (playerAvatar(); as avatar) {
+                  @if (avatar.type === 'image') {
+                    <img [src]="avatar.value" [alt]="playerName()" class="avatar-image">
+                  } @else if (avatar.type === 'letter') {
+                    <span class="avatar-letter">{{ avatar.value }}</span>
+                  } @else {
+                    <span class="avatar-placeholder">?</span>
+                  }
+                }
+              </div>
+              <div class="name-input-wrapper">
+                <input 
+                id="playerName"
+                type="text" 
+                data-testid="input-player-name"
+                [(ngModel)]="playerName"
+                (input)="onNameInput()"
+                (focus)="showSuggestions.set(true)"
+                (blur)="onInputBlur()"
+                (keyup.enter)="startGame()"
+                (keydown.arrowdown)="navigateSuggestions(1)"
+                (keydown.arrowup)="navigateSuggestions(-1)"
+                placeholder="Wähle oder tippe deinen Namen..."
+                maxlength="20"
+                class="name-input"
+                autocomplete="off">
+
+              @if (playerName().trim().length > 0) {
+                <button 
+                  class="clear-btn" 
+                  (mousedown)="clearName()" 
+                  type="button"
+                  aria-label="Eingabe löschen">
+                  ✕
+                </button>
+              }
+              
+              @if (showSuggestions() && filteredNames().length > 0) {
+                <ul class="suggestions-list">
+                  @for (player of filteredNames(); track player.name; let i = $index) {
+                    <li 
+                      class="suggestion-item"
+                      [class.highlighted]="selectedIndex() === i"
+                      (mousedown)="selectName(player.name)"
+                      (mouseenter)="selectedIndex.set(i)">
+                      <img [src]="player.image" [alt]="player.name" class="player-thumbnail">
+                      <span>{{ player.name }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -133,6 +180,78 @@ export interface GameSetup {
       font-size: 1.1em;
     }
 
+    .name-avatar-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .player-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #f0f3ff;
+      border: 3px solid #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      font-size: 56px;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .avatar-letter {
+      font-size: 64px;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .name-input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      background: #ddd;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      color: #666;
+      transition: background 0.2s ease, color 0.2s ease;
+      padding: 0;
+      line-height: 1;
+      margin-top: -12px;
+
+      &:hover {
+        background: #bbb;
+        color: #333;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
     .name-input {
       padding: 15px 20px;
       font-size: 16px;
@@ -140,12 +259,64 @@ export interface GameSetup {
       border-radius: 10px;
       transition: all 0.3s ease;
       font-family: inherit;
+      width: 100%;
     }
 
     .name-input:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .name-input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .suggestions-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #667eea;
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .suggestion-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.highlighted {
+      background: #f0f3ff;
+      color: #667eea;
+    }
+
+    .player-thumbnail {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 12px;
+      border: 2px solid #ddd;
+    }
+
+    .suggestion-item:last-child {
+      border-radius: 0 0 8px 8px;
     }
 
     .opponent-selector {
@@ -246,11 +417,104 @@ export interface GameSetup {
   `]
 })
 export class StartScreenComponent {
+  private gameService = inject(GameService);
+  
   playerName = signal<string>('');
   opponentCount = signal<number>(2);
   opponentOptions = [1, 2, 3, 4];
+  
+  showSuggestions = signal<boolean>(false);
+  selectedIndex = signal<number>(-1);
+  
+  availableNames = this.gameService.getAvailablePlayerNames();
+
+  constructor() {
+    // Preload all player images
+    this.availableNames.forEach(player => {
+      const img = new Image();
+      img.src = player.image;
+    });
+  }
+  
+  filteredNames = computed(() => {
+    const input = this.playerName().toLowerCase().trim();
+    if (!input) {
+      return this.availableNames;
+    }
+    return this.availableNames.filter(player => 
+      player.name.toLowerCase().startsWith(input)
+    );
+  });
+
+  playerAvatar = computed(() => {
+    const name = this.playerName().trim();
+    
+    if (!name) {
+      return { type: 'placeholder', value: '?' };
+    }
+    
+    // Check if name matches a player in the list
+    const matchedPlayer = this.availableNames.find(
+      player => player.name.toLowerCase() === name.toLowerCase()
+    );
+    
+    if (matchedPlayer) {
+      return { type: 'image', value: matchedPlayer.image };
+    }
+    
+    // Use first letter for custom names
+    return { type: 'letter', value: name.charAt(0).toUpperCase() };
+  });
 
   gameStart = output<GameSetup>();
+
+  onNameInput(): void {
+    this.showSuggestions.set(true);
+    this.selectedIndex.set(-1);
+  }
+
+  onInputBlur(): void {
+    // Verzögert ausblenden, damit Click-Event noch funktioniert
+    setTimeout(() => this.showSuggestions.set(false), 200);
+  }
+
+  selectName(name: string): void {
+    this.playerName.set(name);
+    this.showSuggestions.set(false);
+    this.selectedIndex.set(-1);
+  }
+
+  clearName(): void {
+    this.playerName.set('');
+    this.selectedIndex.set(-1);
+    this.showSuggestions.set(true);
+  }
+
+  navigateSuggestions(direction: number): void {
+    if (!this.showSuggestions() || this.filteredNames().length === 0) {
+      return;
+    }
+
+    const currentIndex = this.selectedIndex();
+    const maxIndex = this.filteredNames().length - 1;
+    let newIndex = currentIndex + direction;
+
+    if (newIndex < 0) {
+      newIndex = maxIndex;
+    } else if (newIndex > maxIndex) {
+      newIndex = 0;
+    }
+
+    this.selectedIndex.set(newIndex);
+    
+    // Enter-Taste auswählen
+    if (newIndex >= 0) {
+      const selectedPlayer = this.filteredNames()[newIndex];
+      if (selectedPlayer) {
+        this.playerName.set(selectedPlayer.name);
+      }
+    }
+  }
 
   selectOpponents(count: number): void {
     this.opponentCount.set(count);

@@ -2,7 +2,19 @@
 
 Ein vollständig funktionsfähiges Mau-Mau Kartenspiel mit den offiziellen Schweizer Regeln nach [mau-mau.ch](https://mau-mau.ch).
 
-**Version:** 0.1.0 | [Versioning Guide](VERSIONING.md)
+**Version:** 0.2.0 | [Versioning Guide](VERSIONING.md)
+
+## Project Stats
+
+| Version | Date | LOC (Produktion) | LOC (Tests) | Total LOC |
+|---------|------|------------------|-------------|-----------|
+| 0.2.0   | 8. Januar 2026 | 3.574 | 1.291 | 4.865 |
+
+**Breakdown (v0.2.0):**
+- TypeScript (Production): 2.513 Zeilen
+- TypeScript (Tests): 1.291 Zeilen
+- HTML: 243 Zeilen
+- SCSS/CSS: 818 Zeilen
 
 ## Features
 
@@ -336,7 +348,7 @@ Die vollständige Implementierung der offiziellen Regeln von [mau-mau.ch](https:
 - **7er-Ketten**: Akkumuliert Strafkarten, bis jemand keine 7 mehr hat
 - **8er**: Überspringt nächsten Spieler
 - **10er-Replikator**: Kopiert Effekt der darunterliegenden Karte
-- **Bube**: Farbwahl, "Bube auf Bube stinkt"
+- **Bube**: Farbwahl, "Bube auf Bube geht nicht"
 - **Dame**: Damenrunde mit min. 2 Damen
 - **Ass**: Spieler bleibt am Zug, kein Sieg mit Ass möglich
 - **Strafkarten**: Verdeckt gelagert, aufnehmbar nach ordentlichem Zug

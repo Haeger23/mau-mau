@@ -82,7 +82,7 @@ class GameValidator {
                 player: entry.player,
                 action: entry.action,
                 rule: 'JACK_REPLICATION',
-                reason: '§7 BUBE: 10 auf Bube (Bube auf Bube stinkt!) muss Strafkarte geben'
+                reason: '§7 BUBE: 10 auf Bube (Bube auf Bube geht nicht!) muss Strafkarte geben'
               });
             }
           }

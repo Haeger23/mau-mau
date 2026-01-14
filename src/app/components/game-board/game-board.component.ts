@@ -20,6 +20,9 @@ export class GameBoardComponent implements AfterViewChecked {
 
   protected selectedCard = signal<Card | null>(null);
   protected showSuitSelector = signal<boolean>(false);
+  protected hoverAvatarUrl = signal<string | null>(null);
+  protected hoverAvatarPosition = signal<{ x: number, y: number } | null>(null);
+  private hoverTimeout: any = null;
 
   gameSetup = input.required<GameSetup>();
   returnToStart = output<void>();
@@ -62,6 +65,41 @@ export class GameBoardComponent implements AfterViewChecked {
         this.shouldScrollToBottom = true;
       }
     });
+  }
+
+  protected getPlayerAvatar(playerName: string): { type: string, value: string } {
+    const availablePlayers = this.gameService.getAvailablePlayerNames();
+    const matchedPlayer = availablePlayers.find(
+      player => player.name.toLowerCase() === playerName.toLowerCase()
+    );
+    
+    if (matchedPlayer) {
+      return { type: 'image', value: matchedPlayer.image };
+    }
+    
+    return { type: 'letter', value: playerName.charAt(0).toUpperCase() };
+  }
+
+  protected onAvatarHover(imageUrl: string | null, event?: MouseEvent): void {
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+      this.hoverTimeout = null;
+    }
+    
+    if (imageUrl && event) {
+      const target = event.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      
+      this.hoverTimeout = setTimeout(() => {
+        this.hoverAvatarUrl.set(imageUrl);
+        this.hoverAvatarPosition.set({ x, y });
+      }, 1000);
+    } else {
+      this.hoverAvatarUrl.set(null);
+      this.hoverAvatarPosition.set(null);
+    }
   }
 
   ngAfterViewChecked(): void {
