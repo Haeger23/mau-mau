@@ -1,8 +1,9 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { Card, RANKS, SUITS, Suit, Rank } from '../models/card.model';
 import { Player } from '../models/player.model';
 import { GameState } from '../models/game-state.model';
 import { SeededRandom } from '../../utils/seeded-random';
+import { RuleEngine } from './rule-engine.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +11,7 @@ import { SeededRandom } from '../../utils/seeded-random';
 export class GameService {
   private gameState = signal<GameState>(this.createInitialState());
   private rng = new SeededRandom();
+  private ruleEngine = inject(RuleEngine);
 
   // Public signals
   readonly state = this.gameState.asReadonly();
@@ -295,53 +297,8 @@ export class GameService {
   }
 
   canPlayCard(card: Card): boolean {
-    const state = this.gameState();
-    const topCard = state.discardPile[state.discardPile.length - 1];
-
-    if (!topCard) return false;
-
-    // Aktive 9er-Basis-Kette: aktueller Spieler darf beliebig viele Karten derselben Farbe legen
-    if (state.nineBaseActive && state.nineBasePlayerId === state.players[state.currentPlayerIndex].id) {
-      return card.suit === state.nineBaseSuit;
-    }
-
-    // Bei Strafkarten (7er): Nur weitere 7er oder 10er (replizieren die 7) können gelegt werden
-    // Diese Regel hat Vorrang vor allen anderen (auch vor Buben!)
-    if (state.drawPenalty > 0) {
-      return card.rank === '7' || card.rank === '10';
-    }
-
-    // Damenrunde: Nur Damen oder 10er sind erlaubt
-    if (state.queenRoundActive) {
-      return card.rank === 'Q' || card.rank === '10';
-    }
-
-    // Bube auf Bube ist nicht erlaubt
-    if (topCard.rank === 'J' && card.rank === 'J') {
-      return false;
-    }
-
-    // 10er-Replikator: 10 kann IMMER gespielt werden (repliziert die ausliegende Karte)
-    // Ausnahme: Nicht auf Bube (siehe oben) und nicht bei Strafkarten/Damenrunde (siehe oben)
-    if (card.rank === '10') return true;
-
-    // Bube kann auf alles gelegt werden (außer auf einen anderen Buben und bei Strafkarten)
-    if (card.rank === 'J') return true;
-
-    // WICHTIG: Wenn die oberste Karte eine 10 ist, repliziert sie die Karte darunter
-    // Also müssen wir gegen die Karte darunter prüfen, nicht gegen die 10
-    let cardToMatch = topCard;
-    if (topCard.rank === '10' && state.discardPile.length >= 2) {
-      cardToMatch = state.discardPile[state.discardPile.length - 2];
-    }
-
-    // Nach einem Buben: Nur Karten der gewählten Farbe
-    if (state.chosenSuit) {
-      return card.suit === state.chosenSuit;
-    }
-
-    // Standard: Farbe oder Wert muss übereinstimmen
-    return card.suit === cardToMatch.suit || card.rank === cardToMatch.rank;
+    // Use the RuleEngine for card validation
+    return this.ruleEngine.isCardPlayable(card, this.gameState());
   }
 
   playCard(card: Card, additionalCard?: Card | Card[]): void {
@@ -1020,20 +977,22 @@ export class GameService {
     // ========== SCHRITT 1: Strafkarten aufnehmen ==========
     // Prüfe ob Strafkarten vorhanden sind
     if (currentPlayer.penaltyCards.length > 0) {
-      // KI nimmt Strafkarten auf, aber manchmal zu früh (30% Chance)
-      const shouldForget = this.rng.next() < 0.3;
-      
-      if (shouldForget && state.lastPlayerAction === null) {
-        // Zu früh aufgenommen!
+      // Prüfe ob der richtige Zeitpunkt ist
+      if (state.lastPlayerAction === 'play' || 
+          state.lastPlayerAction === 'draw-complete' ||
+          state.lastPlayerAction === 'penalty-pickup') {
+        // Korrekte Timing - nehme Strafkarten auf
         setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
         return;
-      } else if (state.lastPlayerAction === 'play' || 
-                 state.lastPlayerAction === 'draw-complete' ||
-                 state.lastPlayerAction === 'penalty-pickup') {
-        // Korrekte Timing
+      } else if (state.lastPlayerAction === null) {
+        // Zu früh oder zu spät - trotzdem aufnehmen (wird Strafe geben)
         setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
         return;
       }
+      // Sonst: Warte auf nächsten Zug (sollte nicht vorkommen)
+      // Fallback: Versuche trotzdem aufzunehmen
+      setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
+      return;
     }
 
     // ========== SCHRITT 2: Ansagen prüfen ==========
@@ -1052,10 +1011,12 @@ export class GameService {
     const queenCount = currentPlayer.hand.filter(c => c.rank === 'Q').length;
     if (queenCount >= 2 && !state.queenRoundActive && state.drawPenalty === 0 && this.rng.next() < 0.5) {
       // Erst ankündigen, dann erneut überlegen was zu spielen ist
-      setTimeout(() => this.announceQueenRound(), 400);
-      // Nach der Ankündigung kurz warten und erneut AI-Entscheidung treffen,
-      // damit die erste Karte sicher Dame oder 10 wird
-      setTimeout(() => this.aiPlay(), 600);
+      setTimeout(() => {
+        this.announceQueenRound();
+        // Nach der Ankündigung kurz warten und erneut AI-Entscheidung treffen,
+        // damit die erste Karte sicher Dame oder 10 wird
+        setTimeout(() => this.aiPlay(), 400);
+      }, 400);
       return;
     }
 
@@ -1121,27 +1082,29 @@ export class GameService {
       // Bube-Logik mit Farbwahl
       if (cardToPlay.rank === 'J') {
         const playerId = currentPlayer.id;
-        setTimeout(() => this.playCard(cardToPlay), 600);
-        
-        // Wähle Farbe basierend auf verbleibenden Karten
         setTimeout(() => {
-          const currentState = this.gameState();
-          if (currentState.gameOver) return;
+          this.playCard(cardToPlay);
           
-          const currentPlayerNow = currentState.players.find(p => p.id === playerId);
-          if (!currentPlayerNow) {
-            this.chooseSuit('hearts' as Suit);
-            return;
-          }
-          
-          const suitCounts = this.countSuits(currentPlayerNow.hand);
-          const suitEntries = Object.entries(suitCounts);
-          const chosenSuit = suitEntries.length > 0 
-            ? suitEntries.sort((a, b) => b[1] - a[1])[0][0] as Suit
-            : 'hearts' as Suit;
-          
-          this.chooseSuit(chosenSuit);
-        }, 1000);
+          // Wähle Farbe basierend auf verbleibenden Karten nach dem Spielen
+          setTimeout(() => {
+            const currentState = this.gameState();
+            if (currentState.gameOver) return;
+            
+            const currentPlayerNow = currentState.players.find(p => p.id === playerId);
+            if (!currentPlayerNow) {
+              this.chooseSuit('hearts' as Suit);
+              return;
+            }
+            
+            const suitCounts = this.countSuits(currentPlayerNow.hand);
+            const suitEntries = Object.entries(suitCounts);
+            const chosenSuit = suitEntries.length > 0 
+              ? suitEntries.sort((a, b) => b[1] - a[1])[0][0] as Suit
+              : 'hearts' as Suit;
+            
+            this.chooseSuit(chosenSuit);
+          }, 400);
+        }, 600);
       } else {
         setTimeout(() => this.playCard(cardToPlay), 600);
       }

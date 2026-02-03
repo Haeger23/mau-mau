@@ -14,8 +14,8 @@
       
       <!-- Opponent Players -->
       <div class="opponents">
-        @for (player of opponentPlayers(); track player.id) {
-          <div class="opponent-player" [attr.data-testid]="'opponent-' + player.id">
+        @for (player of opponentPlayers(); track player.id; let idx = $index) {
+          <div class="opponent-player" [attr.data-testid]="'opponent-' + (idx + 1)">
             <div class="player-info" [class.active]="player.isActive">
               <div class="player-header">
                 @if (getPlayerAvatar(player.name); as avatar) {
