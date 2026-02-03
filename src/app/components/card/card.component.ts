@@ -4,6 +4,9 @@ import { Card } from '../../models/card.model';
 @Component({
   selector: 'app-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[attr.clickable]': 'clickable()'
+  },
   template: `
     <div 
       class="card" 

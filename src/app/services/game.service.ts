@@ -4,17 +4,25 @@ import { Player } from '../models/player.model';
 import { GameState } from '../models/game-state.model';
 import { SeededRandom } from '../../utils/seeded-random';
 import { RuleEngine } from './rule-engine.service';
+import { AIService, AIGameActions } from './ai.service';
+import { AI_TIMING } from '../constants/timing.constants';
 
 @Injectable({
   providedIn: 'root'
 })
-export class GameService {
+export class GameService implements AIGameActions {
   private gameState = signal<GameState>(this.createInitialState());
   private rng = new SeededRandom();
   private ruleEngine = inject(RuleEngine);
+  private aiService = inject(AIService);
 
   // Public signals
   readonly state = this.gameState.asReadonly();
+
+  constructor() {
+    // Initialize AI service with callbacks to this service
+    this.aiService.init(this);
+  }
 
   /**
   * Sets seed for deterministic testing
@@ -22,6 +30,7 @@ export class GameService {
   */
   setSeed(seed: number): void {
     this.rng = new SeededRandom(seed);
+    this.aiService.setSeed(seed);
   }
 
   // Schweizer Mau-Mau: Original-Regeltexte von mau-mau.ch
@@ -58,13 +67,15 @@ export class GameService {
       winner: null,
       lastPlayedCard: null,
       chatLog: [],
+      turnPhase: 'WAITING_FOR_ACTION',
       lastPlayerAction: null,
       queenRoundActive: false,
       queenRoundStarterId: null,
       queenRoundNeedsFirstQueen: false,
       nineBaseActive: false,
       nineBaseSuit: null,
-      nineBasePlayerId: null
+      nineBasePlayerId: null,
+      awaitingSuitChoice: false
     };
   }
 
@@ -96,6 +107,9 @@ export class GameService {
   }
 
   startNewGame(playerNames: string[] = ['Du', 'Computer 1', 'Computer 2']): void {
+    // Reset AI guard bei neuem Spiel
+    this.aiService.resetGuard();
+    
     const deck = this.createDeck();
     this.shuffleDeck(deck);
 
@@ -113,7 +127,9 @@ export class GameService {
       hand: [],
       isHuman: index === 0,
       isActive: index === 0,
-      penaltyCards: [],
+      penaltyCards: [], // deprecated - kept for backward compat
+      lockedPenaltyCards: [],
+      pickupablePenaltyCards: [],
       requiredDrawCount: 0,
       drawnThisTurn: 0,
       hasSaidMau: false,
@@ -152,13 +168,15 @@ export class GameService {
         message: 'Spiel gestartet!',
         type: 'play'
       }],
+      turnPhase: 'WAITING_FOR_ACTION',
       lastPlayerAction: null,
       queenRoundActive: false,
       queenRoundStarterId: null,
       queenRoundNeedsFirstQueen: false,
       nineBaseActive: false,
       nineBaseSuit: null,
-      nineBasePlayerId: null
+      nineBasePlayerId: null,
+      awaitingSuitChoice: false
     });
   }
 
@@ -222,12 +240,16 @@ export class GameService {
       }
       const card = state.deck.pop();
       if (card) {
-        player.penaltyCards.push(card);
+        // Neue Strafkarten gehen zu lockedPenaltyCards
+        // Sie werden erst nach einem gültigen Zug zu pickupablePenaltyCards
+        player.lockedPenaltyCards.push(card);
+        player.penaltyCards.push(card); // deprecated - für Rückwärtskompatibilität
       }
     }
 
-    // Reset lastPlayerAction
+    // Reset lastPlayerAction and turnPhase
     state.lastPlayerAction = null;
+    state.turnPhase = 'WAITING_FOR_ACTION';
 
     // Log mit Regel-Erklärung
     this.addChatLog(
@@ -240,16 +262,28 @@ export class GameService {
     this.gameState.set({ ...state });
   }
 
-  pickupPenaltyCards(playerId: string): void {
+  /**
+   * Nimmt eine einzelne Strafkarte auf
+   * @param playerId ID des Spielers
+   * @param cardId ID der aufzunehmenden Karte
+   * @param isPickupable true wenn aus pickupablePenaltyCards, false wenn aus lockedPenaltyCards
+   */
+  pickupSinglePenaltyCard(playerId: string, cardId: string, isPickupable: boolean): void {
     const state = this.gameState();
     const player = state.players.find(p => p.id === playerId);
-    if (!player || player.penaltyCards.length === 0) return;
+    if (!player) return;
 
-    // Prüfe ob Spieler einen gültigen Zug gemacht hat
-    if (state.lastPlayerAction !== 'play' && 
-        state.lastPlayerAction !== 'draw-complete' &&
-        state.lastPlayerAction !== 'penalty-pickup') {
-      // Zu früh aufgenommen - Strafe!
+    if (isPickupable) {
+      // Aufnehmbare Karte - erlaubt
+      const cardIndex = player.pickupablePenaltyCards.findIndex(c => c.id === cardId);
+      if (cardIndex === -1) return;
+      
+      const card = player.pickupablePenaltyCards.splice(cardIndex, 1)[0];
+      player.hand.push(card);
+      
+      this.addChatLog(player.name, 'nimmt 1 Strafkarte auf', 'draw');
+    } else {
+      // Gesperrte Karte - Strafe für zu frühes Aufnehmen
       this.assignPenaltyCards(
         playerId,
         1,
@@ -258,11 +292,39 @@ export class GameService {
       );
       return;
     }
+    
+    // Update deprecated penaltyCards array
+    player.penaltyCards = [...player.lockedPenaltyCards, ...player.pickupablePenaltyCards];
+    
+    this.gameState.set({ ...state });
+  }
 
-    // Verschiebe alle Strafkarten zur Hand
-    const count = player.penaltyCards.length;
-    player.hand.push(...player.penaltyCards);
-    player.penaltyCards = [];
+  pickupPenaltyCards(playerId: string): void {
+    const state = this.gameState();
+    const player = state.players.find(p => p.id === playerId);
+    if (!player) return;
+    
+    // Nur pickupable Karten aufnehmen
+    if (player.pickupablePenaltyCards.length === 0) {
+      // Keine aufnehmbaren Karten - Strafe wenn locked vorhanden
+      if (player.lockedPenaltyCards.length > 0) {
+        this.assignPenaltyCards(
+          playerId,
+          1,
+          'Strafkarten zu früh aufgenommen',
+          'PENALTY_TOO_EARLY'
+        );
+      }
+      return;
+    }
+
+    // Verschiebe alle aufnehmbaren Strafkarten zur Hand
+    const count = player.pickupablePenaltyCards.length;
+    player.hand.push(...player.pickupablePenaltyCards);
+    player.pickupablePenaltyCards = [];
+    
+    // Update deprecated penaltyCards array
+    player.penaltyCards = [...player.lockedPenaltyCards, ...player.pickupablePenaltyCards];
 
     this.addChatLog(
       player.name,
@@ -270,16 +332,13 @@ export class GameService {
       'draw'
     );
 
-    // Setze lastPlayerAction damit nextTurn() nicht erneut penalty auslöst
-    state.lastPlayerAction = 'penalty-pickup';
     this.gameState.set({ ...state });
     
-    // Nach Aufnahme: Zug beenden und nächster Spieler
-    // Für KI automatisch, für Menschen manuell
+    // Nach Aufnahme: KI setzt ihren Zug fort
     if (!player.isHuman) {
-      setTimeout(() => this.nextTurn(), 1000);
+      this.aiService.resetGuard();
+      setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.PENALTY_PICKUP_DELAY);
     }
-    // Hinweis: Menschlicher Spieler muss manuell "Zug beenden" klicken
   }
 
   private getCardDisplayName(card: Card): string {
@@ -354,6 +413,7 @@ export class GameService {
       state.discardPile.push(card);
       state.lastPlayedCard = card;
       state.lastPlayerAction = 'play';
+      state.turnPhase = 'CARD_PLAYED';
       this.addChatLog(currentPlayer.name, `spielt ${this.getCardDisplayName(card)}`, 'play');
       this.gameState.set({ ...state });
       return;
@@ -399,6 +459,7 @@ export class GameService {
       const topCard = additionalCards[additionalCards.length - 1];
       state.lastPlayedCard = topCard;
       state.lastPlayerAction = 'play';
+      state.turnPhase = 'CARD_PLAYED';
       
       const cardsPlayed = additionalCards.length + 1;
       this.addChatLog(
@@ -504,12 +565,16 @@ export class GameService {
       state.discardPile.push(card);
       state.lastPlayedCard = card;
       state.lastPlayerAction = 'play';
+      state.turnPhase = 'CARD_PLAYED';
+      state.activeAce = true; // Spieler muss noch eine Aktion machen
       this.addChatLog(currentPlayer.name, `spielt ${this.getCardDisplayName(card)} - ist erneut am Zug`, 'play');
       this.gameState.set({ ...state });
       
       // Wenn KI Ass gespielt hat, triggere nochmal aiPlay()
       if (!currentPlayer.isHuman) {
-        setTimeout(() => this.aiPlay(), 1000);
+        // WICHTIG: Guard zurücksetzen, damit KI wieder spielen kann
+        this.aiService.resetGuard();
+        setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
       }
       
       // Spieler bleibt am Zug - KEIN nextTurn()!
@@ -520,6 +585,12 @@ export class GameService {
     state.discardPile.push(card);
     state.lastPlayedCard = card;
     state.lastPlayerAction = 'play';
+    state.turnPhase = 'CARD_PLAYED';
+    
+    // Wenn eine Karte nach einem Ass gespielt wird, reset activeAce
+    if (state.activeAce) {
+      state.activeAce = false;
+    }
     
     // Log nur wenn nicht 7er-Escape (wird in applyCardEffect geloggt)
     if (!isEscapingWith7) {
@@ -601,26 +672,14 @@ export class GameService {
       }
       // Menschlicher Spieler muss "Zug beenden" klicken
     } else {
-      console.log('Bube gespielt von', currentPlayer.name, '- warte auf Farbwahl');
+      // Markiere dass Farbwahl erwartet wird
+      const jackState = this.gameState();
+      jackState.awaitingSuitChoice = true;
+      jackState.turnPhase = 'AWAITING_SUIT_CHOICE';
+      this.gameState.set({ ...jackState });
       
-      if (!currentPlayer.isHuman) {
-        setTimeout(() => {
-          const currentState = this.gameState();
-          if (!currentState.gameOver && !currentState.chosenSuit) {
-            const player = currentState.players.find(p => p.id === currentPlayer.id);
-            if (player) {
-              const suitCounts = this.countSuits(player.hand);
-              const suitEntries = Object.entries(suitCounts);
-              const chosenSuit = suitEntries.length > 0 
-                ? suitEntries.sort((a, b) => b[1] - a[1])[0][0] as Suit
-                : 'hearts' as Suit;
-              this.chooseSuit(chosenSuit);
-            } else {
-              this.chooseSuit('hearts' as Suit);
-            }
-          }
-        }, 500);
-      }
+      // AI suit choice is handled by AIService.playJackWithSuitChoice()
+      // Human players use the SuitSelectorComponent
     }
   }
 
@@ -684,7 +743,7 @@ export class GameService {
             // Zug ist ungültig - nächster Spieler
             // Für KI automatisch, für Menschen manuell
             if (!currentPlayer.isHuman) {
-              setTimeout(() => this.nextTurn(), 1000);
+              setTimeout(() => this.nextTurn(), AI_TIMING.TURN_DELAY);
             }
             break;
           }
@@ -753,12 +812,10 @@ export class GameService {
   chooseSuit(suit: Suit): void {
     const state = this.gameState();
     if (state.gameOver) {
-      console.log('chooseSuit abgebrochen - Spiel vorbei');
       return;
     }
     
     const currentPlayer = state.players[state.currentPlayerIndex];
-    console.log('Farbwahl:', suit, 'von', currentPlayer.name);
     
     const suitNames: Record<string, string> = {
       'hearts': '♥️ Herz',
@@ -770,6 +827,8 @@ export class GameService {
     this.addChatLog(currentPlayer.name, `wünscht sich ${suitNames[suit]}`, 'suit');
     
     state.chosenSuit = suit;
+    state.awaitingSuitChoice = false; // Farbwahl abgeschlossen
+    state.turnPhase = 'SUIT_CHOSEN';
     this.gameState.set({ ...state });
     
     // Für Menschen: Warte auf manuelles "Zug beenden"
@@ -782,6 +841,21 @@ export class GameService {
   drawCard(): void {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
+
+    // DAMENRUNDE ESCAPE: Wenn Damenrunde aktiv und Spieler keine Dame/10 hat,
+    // darf er ziehen um dem "stuck" Zustand zu entkommen
+    if (state.queenRoundActive) {
+      const hasQueenOrTen = currentPlayer.hand.some(c => c.rank === 'Q' || c.rank === '10');
+      if (!hasQueenOrTen) {
+        // Spieler hat keine gültige Karte - Ziehen erlaubt als Escape
+        this.addChatLog(currentPlayer.name, 'hat keine Dame/10 - zieht Karte', 'draw');
+      }
+    }
+    
+    // Wenn nach einem Ass gezogen wird, reset activeAce
+    if (state.activeAce) {
+      state.activeAce = false;
+    }
 
     // Beim ersten Ziehen: setze requiredDrawCount wenn 7er-Strafe aktiv
     if (currentPlayer.drawnThisTurn === 0 && state.drawPenalty > 0) {
@@ -809,6 +883,7 @@ export class GameService {
     if (currentPlayer.requiredDrawCount > 0 && currentPlayer.drawnThisTurn >= currentPlayer.requiredDrawCount) {
       // Ziehpflicht erfüllt: Zug bleibt beim Spieler, Beschränkung fällt weg
       state.lastPlayerAction = 'draw-complete';
+      state.turnPhase = 'DRAW_COMPLETE';
       state.drawPenalty = 0; // Beschränkung (nur 7/10) sofort aufheben
       currentPlayer.requiredDrawCount = 0; // Weitere Logik soll wie normales Ziehen reagieren
       this.addChatLog(
@@ -819,6 +894,7 @@ export class GameService {
     } else if (currentPlayer.requiredDrawCount === 0) {
       // Normales Ziehen ohne 7er-Strafe
       state.lastPlayerAction = 'draw-complete';
+      state.turnPhase = 'DRAW_COMPLETE';
     }
 
     this.gameState.set({ ...state });
@@ -845,6 +921,15 @@ export class GameService {
   endTurn(): void {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
+
+    // WICHTIG: Gültiger Zug wurde abgeschlossen
+    // Verschiebe alle locked Strafkarten zu pickupable für DIESEN Spieler
+    if (currentPlayer.lockedPenaltyCards.length > 0) {
+      currentPlayer.pickupablePenaltyCards.push(...currentPlayer.lockedPenaltyCards);
+      currentPlayer.lockedPenaltyCards = [];
+      // Update deprecated array
+      currentPlayer.penaltyCards = [...currentPlayer.lockedPenaltyCards, ...currentPlayer.pickupablePenaltyCards];
+    }
 
     // 9er-Basis-Kette: Wende Effekt der obersten Karte zuerst an und beende die Kette
     if (state.nineBaseActive && state.nineBasePlayerId === currentPlayer.id) {
@@ -942,6 +1027,11 @@ export class GameService {
   private nextTurn(): void {
     const state = this.gameState();
 
+    // Reset turn phase and lastPlayerAction for new turn
+    state.turnPhase = 'WAITING_FOR_ACTION';
+    state.lastPlayerAction = null;
+    state.activeAce = false; // Reset Ass-Flag für nächsten Spieler
+
     // Handle skip
     if (state.skipNext) {
       state.skipNext = false;
@@ -961,198 +1051,36 @@ export class GameService {
     // If next player is AI, play automatically after a delay
     const currentPlayer = state.players[state.currentPlayerIndex];
     if (!currentPlayer.isHuman && !state.gameOver) {
-      setTimeout(() => this.aiPlay(), 1000);
-    }
-  }
-
-  private aiPlay(): void {
-    const state = this.gameState();
-    if (state.gameOver) return; // Spiel ist vorbei
-    
-    const currentPlayer = state.players[state.currentPlayerIndex];
-    
-    // Sicherheitscheck: Nur wenn aktueller Spieler KI ist
-    if (currentPlayer.isHuman) return;
-
-    // ========== SCHRITT 1: Strafkarten aufnehmen ==========
-    // Prüfe ob Strafkarten vorhanden sind
-    if (currentPlayer.penaltyCards.length > 0) {
-      // Prüfe ob der richtige Zeitpunkt ist
-      if (state.lastPlayerAction === 'play' || 
-          state.lastPlayerAction === 'draw-complete' ||
-          state.lastPlayerAction === 'penalty-pickup') {
-        // Korrekte Timing - nehme Strafkarten auf
-        setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
-        return;
-      } else if (state.lastPlayerAction === null) {
-        // Zu früh oder zu spät - trotzdem aufnehmen (wird Strafe geben)
-        setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
-        return;
-      }
-      // Sonst: Warte auf nächsten Zug (sollte nicht vorkommen)
-      // Fallback: Versuche trotzdem aufzunehmen
-      setTimeout(() => this.pickupPenaltyCards(currentPlayer.id), 500);
-      return;
-    }
-
-    // ========== SCHRITT 2: Ansagen prüfen ==========
-    // Prüfe "Mau" (80% Chance bei 1 Karte)
-    if (currentPlayer.hand.length === 1 && !currentPlayer.hasSaidMau && this.rng.next() < 0.8) {
-      setTimeout(() => this.sayMau(), 300);
-    }
-
-    // Prüfe "Mau-Mau" (90% Chance) NUR wenn Hand leer ist und letzte Karte ein Bube war
-    const lastCard = state.discardPile[state.discardPile.length - 1];
-    if (currentPlayer.hand.length === 0 && lastCard && lastCard.rank === 'J' && !currentPlayer.hasSaidMauMau && this.rng.next() < 0.9) {
-      setTimeout(() => this.sayMauMau(), 300);
-    }
-
-    // Prüfe Damenrunde ankündigen (50% Chance bei 2+ Damen) – aber nie während einer aktiven Ziehpflicht
-    const queenCount = currentPlayer.hand.filter(c => c.rank === 'Q').length;
-    if (queenCount >= 2 && !state.queenRoundActive && state.drawPenalty === 0 && this.rng.next() < 0.5) {
-      // Erst ankündigen, dann erneut überlegen was zu spielen ist
-      setTimeout(() => {
-        this.announceQueenRound();
-        // Nach der Ankündigung kurz warten und erneut AI-Entscheidung treffen,
-        // damit die erste Karte sicher Dame oder 10 wird
-        setTimeout(() => this.aiPlay(), 400);
-      }, 400);
-      return;
-    }
-
-    // Prüfe Damenrunde beenden (wenn Starter und letzte Karte war Dame)
-    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter) {
-      const lastCard = state.discardPile[state.discardPile.length - 1];
-      const lastWasQueen = lastCard && lastCard.rank === 'Q';
-      
-      // KI beendet Damenrunde nach dem Spielen einer Dame (80% Chance)
-      if (lastWasQueen && this.rng.next() < 0.8) {
-        setTimeout(() => this.endQueenRound(), 400);
-      }
-    }
-
-    // ========== SCHRITT 3: Spielbare Karten prüfen ==========
-    // Bei 7er-Strafe: Prüfe ob KI eine 7 oder 10 zum Aussteigen hat
-    if (state.drawPenalty > 0) {
-      // Bevorzuge 7, dann 10 (10 könnte Bube replizieren)
-      const seven = currentPlayer.hand.find(c => c.rank === '7');
-      const ten = currentPlayer.hand.find(c => c.rank === '10');
-      
-      if (seven) {
-        // KI spielt die 7 um der Strafe zu entkommen
-        setTimeout(() => this.playCard(seven), 600);
-        return;
-      } else if (ten) {
-        // KI spielt die 10 um der Strafe zu entkommen (repliziert die 7)
-        setTimeout(() => this.playCard(ten), 600);
-        return;
-      }
-      // Keine 7 oder 10 → KI muss Strafkarten ziehen
-      setTimeout(() => this.aiDrawCards(), 600);
-      return;
-    }
-
-    // Ermittle alle spielbaren Karten
-    const playableCards = currentPlayer.hand.filter(card => this.canPlayCard(card));
-
-    if (playableCards.length > 0) {
-      let cardToPlay = playableCards[0];
-      
-      // DAMENRUNDE STRATEGIE: KI bevorzugt 10er (60% Chance) um Damenrunde zu verlängern
-      if (state.queenRoundActive) {
-        const queens = playableCards.filter(c => c.rank === 'Q');
-        const tens = playableCards.filter(c => c.rank === '10');
-        
-        // 60% Chance: KI spielt 10 statt Dame (wenn verfügbar)
-        if (tens.length > 0 && this.rng.next() < 0.6) {
-          cardToPlay = tens[0];
-        } else if (queens.length > 0) {
-          // 40% Chance oder keine 10: spiele Dame
-          cardToPlay = queens[0];
-        }
-      }
-      
-      // Schweizer Ass-Regel: Prüfe ob Ass die letzte Karte wäre
-      if (cardToPlay.rank === 'A' && currentPlayer.hand.length === 1) {
-        // Ass als letzte Karte nicht spielen - ziehe stattdessen
-        setTimeout(() => this.aiDrawCards(), 600);
-        return;
-      }
-
-      // Bube-Logik mit Farbwahl
-      if (cardToPlay.rank === 'J') {
-        const playerId = currentPlayer.id;
-        setTimeout(() => {
-          this.playCard(cardToPlay);
-          
-          // Wähle Farbe basierend auf verbleibenden Karten nach dem Spielen
-          setTimeout(() => {
-            const currentState = this.gameState();
-            if (currentState.gameOver) return;
-            
-            const currentPlayerNow = currentState.players.find(p => p.id === playerId);
-            if (!currentPlayerNow) {
-              this.chooseSuit('hearts' as Suit);
-              return;
-            }
-            
-            const suitCounts = this.countSuits(currentPlayerNow.hand);
-            const suitEntries = Object.entries(suitCounts);
-            const chosenSuit = suitEntries.length > 0 
-              ? suitEntries.sort((a, b) => b[1] - a[1])[0][0] as Suit
-              : 'hearts' as Suit;
-            
-            this.chooseSuit(chosenSuit);
-          }, 400);
-        }, 600);
-      } else {
-        setTimeout(() => this.playCard(cardToPlay), 600);
-      }
+      // Reset guard before next AI turn
+      this.aiService.resetGuard();
+      setTimeout(() => this.triggerAIPlay(), AI_TIMING.TURN_DELAY);
     } else {
-      // Keine spielbare Karte - manuelles Ziehen mit Fehlerchance
-      setTimeout(() => this.aiDrawCards(), 600);
+      // Human player or game over - reset guard
+      this.aiService.resetGuard();
     }
   }
 
   /**
-   * KI zieht Karten manuell (mit perfekter Genauigkeit in dieser Implementierung)
-   * Wird aufgerufen wenn keine spielbare Karte vorhanden oder bei 7er-Strafe
+   * Trigger AI to play (called by AIService or internally)
    */
-  private aiDrawCards(): void {
-    const state = this.gameState();
-    const currentPlayer = state.players[state.currentPlayerIndex];
-
-    // Berechne benötigte Anzahl
-    const requiredCount = state.drawPenalty > 0 ? state.drawPenalty : 1;
-    const wasDrawPenalty = state.drawPenalty > 0;
-
-    // Ziehe Karten einzeln
-    const drawNext = (count: number) => {
-      if (count > 0) {
-        this.drawCard();
-        setTimeout(() => drawNext(count - 1), 300);
-      } else {
-        // Alle Karten gezogen
-        // Wenn Strafkarten gezogen wurden, reset drawPenalty
-        if (wasDrawPenalty) {
-          const currentState = this.gameState();
-          currentState.drawPenalty = 0;
-          this.gameState.set({ ...currentState });
-        }
-        
-        // Beende Zug
-        setTimeout(() => this.endTurn(), 500);
-      }
-    };
-
-    drawNext(requiredCount);
+  triggerAIPlay(): void {
+    this.aiService.playTurn(this.gameState());
   }
 
-  private countSuits(cards: Card[]): Record<Suit, number> {
-    return cards.reduce((acc, card) => {
-      acc[card.suit] = (acc[card.suit] || 0) + 1;
-      return acc;
-    }, {} as Record<Suit, number>);
+  /**
+   * Get current game state (for AIGameActions interface)
+   */
+  getState(): GameState {
+    return this.gameState();
+  }
+
+  /**
+   * Reset draw penalty (for AIGameActions interface)
+   */
+  resetDrawPenalty(): void {
+    const state = this.gameState();
+    state.drawPenalty = 0;
+    this.gameState.set({ ...state });
   }
 
   getCurrentPlayer(): Player | null {
@@ -1423,12 +1351,24 @@ export class GameService {
   /**
    * Prüft ob der Zug jetzt beendet werden kann
    * Wird vor endTurn() aufgerufen
+   * Uses turnPhase state machine with fallback to lastPlayerAction
    */
   canEndTurnNow(): boolean {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
     
-    // Zug kann beendet werden wenn:
+    // Ass-Regel: Wenn activeAce true ist, muss noch eine weitere Aktion gemacht werden
+    if (state.activeAce) {
+      return false;
+    }
+    
+    // Primary check: turnPhase state machine
+    const validEndPhases: string[] = ['CARD_PLAYED', 'SUIT_CHOSEN', 'DRAW_COMPLETE'];
+    if (validEndPhases.includes(state.turnPhase)) {
+      return true;
+    }
+    
+    // Fallback: legacy lastPlayerAction check (deprecated)
     // 1. lastPlayerAction ist 'play' (Karte wurde gespielt)
     // 2. lastPlayerAction ist 'draw-complete' (alle Karten gezogen)
     // 3. lastPlayerAction ist 'penalty-pickup' (Strafkarten aufgenommen)

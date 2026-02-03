@@ -1,6 +1,19 @@
 import { Card, Suit } from './card.model';
 import { Player } from './player.model';
 
+/**
+ * Explicit turn phase state machine.
+ * Replaces ambiguous string-based lastPlayerAction with typed phases.
+ */
+export type TurnPhase = 
+  | 'WAITING_FOR_ACTION'      // Turn started, player can play or draw
+  | 'CARD_PLAYED'             // Card played, may need suit choice or can end
+  | 'AWAITING_SUIT_CHOICE'    // Jack played, must choose suit
+  | 'SUIT_CHOSEN'             // Suit chosen, can end turn
+  | 'DRAWING'                 // Drawing cards (penalty or normal)
+  | 'DRAW_COMPLETE'           // Drawing done, can play or end
+  | 'TURN_ENDING';            // Processing turn end
+
 export interface ChatMessage {
   timestamp: Date;
   playerName: string;
@@ -23,7 +36,9 @@ export interface GameState {
   winner: Player | null;
   lastPlayedCard: Card | null;
   chatLog: ChatMessage[];
-  // Schweizer Mau-Mau: Zug-Status
+  // Turn phase state machine
+  turnPhase: TurnPhase;
+  // Schweizer Mau-Mau: Zug-Status (deprecated - use turnPhase)
   lastPlayerAction: 'play' | 'draw-complete' | 'awaiting-draw' | 'penalty-pickup' | null;
   // Schweizer Mau-Mau: Damenrunde
   queenRoundActive: boolean;
@@ -33,6 +48,8 @@ export interface GameState {
   nineBaseActive: boolean;
   nineBaseSuit: Suit | null;
   nineBasePlayerId: string | null;
+  // Bube: Warte auf Farbwahl
+  awaitingSuitChoice: boolean;
 }
 
 export type GameAction = 

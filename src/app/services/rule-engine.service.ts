@@ -6,7 +6,10 @@ import { CardRule } from '../rules/card-rule.interface';
 import { DefaultRule } from '../rules/default-rule';
 import { EightRule } from '../rules/eight-rule';
 import { JackRule } from '../rules/jack-rule';
+import { NineRule } from '../rules/nine-rule';
+import { QueenRule } from '../rules/queen-rule';
 import { SevenRule } from '../rules/seven-rule';
+import { TenRule } from '../rules/ten-rule';
 
 @Injectable({
   providedIn: 'root',
@@ -19,9 +22,11 @@ export class RuleEngine {
     this.rules = [
       new SevenRule(),
       new EightRule(),
+      new NineRule(),
+      new TenRule(),
       new AceRule(),
       new JackRule(),
-      // ... other rules like Queen, Ten, etc. will be added here
+      new QueenRule(),
       new DefaultRule(), // The default rule should always be last.
     ];
   }

@@ -34,8 +34,24 @@
                   <div class="card-count" [attr.data-testid]="'player-' + player.id + '-hand-size'">{{ player.hand.length }} Karten</div>
                 </div>
               </div>
-              @if (player.penaltyCards.length > 0) {
-                <div class="penalty-badge">⚠️ {{ player.penaltyCards.length }} Strafkarten</div>
+              @if (player.lockedPenaltyCards.length > 0 || player.pickupablePenaltyCards.length > 0) {
+                <div class="penalty-cards-display">
+                  <div class="penalty-group locked-group" aria-label="Gesperrte Strafkarten">
+                    @for (card of player.lockedPenaltyCards; track card.id; let i = $index) {
+                      <div class="card-back mini-penalty" 
+                           [attr.aria-label]="'Gesperrte Strafkarte ' + (i + 1) + ' von ' + player.lockedPenaltyCards.length"></div>
+                    }
+                  </div>
+                  @if (player.lockedPenaltyCards.length > 0 && player.pickupablePenaltyCards.length > 0) {
+                    <div class="penalty-divider"></div>
+                  }
+                  <div class="penalty-group pickupable-group" aria-label="Aufnehmbare Strafkarten">
+                    @for (card of player.pickupablePenaltyCards; track card.id; let i = $index) {
+                      <div class="card-back mini-penalty" 
+                           [attr.aria-label]="'Aufnehmbare Strafkarte ' + (i + 1) + ' von ' + player.pickupablePenaltyCards.length"></div>
+                    }
+                  </div>
+                </div>
               }
               <div class="player-badges">
                 @if (player.hasSaidMau) {
@@ -128,10 +144,30 @@
                 </div>
               </div>
             </div>
-            @if (humanPlayer()!.penaltyCards.length > 0) {
-              <div class="penalty-warning">
-                ⚠️ {{ humanPlayer()!.penaltyCards.length }} Strafkarte(n) bereit zum Aufnehmen
-                <button class="pickup-btn" data-testid="action-pickup-penalty" (click)="onPickupPenalty()">Aufnehmen</button>
+            @if (humanPlayer()!.lockedPenaltyCards.length > 0 || humanPlayer()!.pickupablePenaltyCards.length > 0) {
+              <div class="penalty-cards-display human-penalty" data-testid="human-penalty-cards">
+                <span class="penalty-label">Strafkarten:</span>
+                <div class="penalty-group locked-group" aria-label="Gesperrte Strafkarten">
+                  @for (card of humanPlayer()!.lockedPenaltyCards; track card.id; let i = $index) {
+                    <button class="card-back mini-penalty clickable" 
+                            type="button"
+                            [attr.aria-label]="'Gesperrte Strafkarte ' + (i + 1) + ' von ' + humanPlayer()!.lockedPenaltyCards.length + ' - Klick gibt Strafe'"
+                            [attr.data-testid]="'locked-penalty-' + i"
+                            (click)="onPickupSinglePenalty(card, false)"></button>
+                  }
+                </div>
+                @if (humanPlayer()!.lockedPenaltyCards.length > 0 && humanPlayer()!.pickupablePenaltyCards.length > 0) {
+                  <div class="penalty-divider"></div>
+                }
+                <div class="penalty-group pickupable-group" aria-label="Aufnehmbare Strafkarten">
+                  @for (card of humanPlayer()!.pickupablePenaltyCards; track card.id; let i = $index) {
+                    <button class="card-back mini-penalty clickable" 
+                            type="button"
+                            [attr.aria-label]="'Aufnehmbare Strafkarte ' + (i + 1) + ' von ' + humanPlayer()!.pickupablePenaltyCards.length"
+                            [attr.data-testid]="'pickupable-penalty-' + i"
+                            (click)="onPickupSinglePenalty(card, true)"></button>
+                  }
+                </div>
               </div>
             }
             <div class="player-badges">

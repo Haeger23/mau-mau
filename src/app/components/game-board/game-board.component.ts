@@ -225,6 +225,13 @@ export class GameBoardComponent implements AfterViewChecked {
     }
   }
 
+  onPickupSinglePenalty(card: Card, isPickupable: boolean): void {
+    const human = this.humanPlayer();
+    if (human && human.isActive) {
+      this.gameService.pickupSinglePenaltyCard(human.id, card.id, isPickupable);
+    }
+  }
+
   toggleRuleExplanation(msg: any): void {
     msg.showExplanation = !msg.showExplanation;
   }
