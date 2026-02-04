@@ -57,8 +57,12 @@ export class AIService {
    * Called when it's an AI player's turn
    */
   playTurn(state: GameState): void {
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    console.log(`[AIService.playTurn] Called for ${currentPlayer.name}, aiTurnInProgress=${this.aiTurnInProgress}, gameOver=${state.gameOver}`);
+    
     // Guard: Prevent simultaneous AI turns
     if (this.aiTurnInProgress) {
+      console.log(`[AIService.playTurn] BLOCKED - aiTurnInProgress is true`);
       return;
     }
     this.aiTurnInProgress = true;
@@ -74,8 +78,6 @@ export class AIService {
       return;
     }
 
-    const currentPlayer = state.players[state.currentPlayerIndex];
-
     // Safety check: Only if current player is AI
     if (currentPlayer.isHuman) {
       this.aiTurnInProgress = false;
@@ -83,8 +85,12 @@ export class AIService {
     }
 
     // ========== STEP 1: Pickup penalty cards ==========
-    if (currentPlayer.penaltyCards.length > 0) {
-      setTimeout(() => this.gameActions.pickupPenaltyCards(currentPlayer.id), AI_TIMING.PENALTY_PICKUP_DELAY);
+    // Only pick up cards that are pickupable (not locked)
+    if (currentPlayer.pickupablePenaltyCards.length > 0) {
+      setTimeout(() => {
+        this.aiTurnInProgress = false; // Reset before action that may trigger next turn
+        this.gameActions.pickupPenaltyCards(currentPlayer.id);
+      }, AI_TIMING.PENALTY_PICKUP_DELAY);
       return;
     }
 
@@ -101,7 +107,23 @@ export class AIService {
     if (state.queenRoundActive) {
       const hasQueenOrTen = currentPlayer.hand.some(c => c.rank === 'Q' || c.rank === '10');
       if (!hasQueenOrTen) {
-        setTimeout(() => this.drawCards(state), AI_TIMING.ACTION_DELAY);
+        // Draw ONE card - drawCard() handles the turn ending automatically for AI
+        // Don't call endTurn() here because drawCard() already does nextTurn() for AI
+        setTimeout(() => {
+          this.aiTurnInProgress = false; // Reset before action
+          this.gameActions.drawCard();
+          // After drawing, AI needs to end turn or play if possible
+          // This is handled by drawCards() method, but Queen escape uses single drawCard
+          // So we need to explicitly handle the flow:
+          const newState = this.gameActions.getState();
+          const player = newState.players[newState.currentPlayerIndex];
+          const playable = player.hand.filter(c => this.gameActions.canPlayCard(c));
+          if (playable.length > 0) {
+            setTimeout(() => this.gameActions.triggerAIPlay(), AI_TIMING.TURN_DELAY);
+          } else {
+            setTimeout(() => this.gameActions.endTurn(), AI_TIMING.END_TURN_DELAY);
+          }
+        }, AI_TIMING.ACTION_DELAY);
         return;
       }
     }
@@ -118,14 +140,10 @@ export class AIService {
   }
 
   /**
-   * Check and execute announcements (Mau, Mau-Mau, Queen Round)
+   * Check and execute announcements (Mau-Mau, Queen Round)
+   * Note: Mau is checked after playing a card in playBestCard()
    */
   private checkAnnouncements(player: Player, state: GameState): void {
-    // Check "Mau" (80% chance with 1 card)
-    if (player.hand.length === 1 && !player.hasSaidMau && this.rng.next() < 0.8) {
-      setTimeout(() => this.gameActions.sayMau(), AI_TIMING.ANNOUNCEMENT_DELAY);
-    }
-
     // Check "Mau-Mau" (90% chance) only when hand is empty and last card was Jack
     const lastCard = state.discardPile[state.discardPile.length - 1];
     if (player.hand.length === 0 && lastCard?.rank === 'J' && !player.hasSaidMauMau && this.rng.next() < 0.9) {
@@ -138,6 +156,8 @@ export class AIService {
       setTimeout(() => {
         this.gameActions.announceQueenRound();
         // After announcement, re-evaluate what to play
+        // IMPORTANT: Reset guard before re-triggering AI
+        this.aiTurnInProgress = false;
         setTimeout(() => this.gameActions.triggerAIPlay(), AI_TIMING.QUEEN_ROUND_DELAY);
       }, AI_TIMING.QUEEN_ROUND_DELAY);
       return;
@@ -161,9 +181,15 @@ export class AIService {
     const ten = player.hand.find(c => c.rank === '10');
 
     if (seven) {
-      setTimeout(() => this.gameActions.playCard(seven), AI_TIMING.ACTION_DELAY);
+      setTimeout(() => {
+        this.aiTurnInProgress = false; // Reset before playCard
+        this.gameActions.playCard(seven);
+      }, AI_TIMING.ACTION_DELAY);
     } else if (ten) {
-      setTimeout(() => this.gameActions.playCard(ten), AI_TIMING.ACTION_DELAY);
+      setTimeout(() => {
+        this.aiTurnInProgress = false; // Reset before playCard
+        this.gameActions.playCard(ten);
+      }, AI_TIMING.ACTION_DELAY);
     } else {
       // No escape card - must draw penalty
       setTimeout(() => this.drawCards(state), AI_TIMING.ACTION_DELAY);
@@ -198,7 +224,27 @@ export class AIService {
     if (cardToPlay.rank === 'J') {
       this.playJackWithSuitChoice(cardToPlay, player);
     } else {
-      setTimeout(() => this.gameActions.playCard(cardToPlay), AI_TIMING.ACTION_DELAY);
+      const playerId = player.id;
+      setTimeout(() => {
+        // Reset guard BEFORE playCard, because playCard->nextTurn will trigger next AI
+        this.aiTurnInProgress = false;
+        this.gameActions.playCard(cardToPlay);
+        // Check Mau AFTER playing card (if hand reduced to 1)
+        this.checkMauAfterPlay(playerId);
+      }, AI_TIMING.ACTION_DELAY);
+    }
+  }
+
+  /**
+   * Check and say Mau after playing a card (if hand has 1 card left)
+   */
+  private checkMauAfterPlay(playerId: string): void {
+    const currentState = this.gameActions.getState();
+    const player = currentState.players.find(p => p.id === playerId);
+    if (player && player.hand.length === 1 && !player.hasSaidMau && this.rng.next() < 0.8) {
+      // IMPORTANT: Don't call sayMau() because it uses currentPlayer (which might have changed after nextTurn)
+      // Instead, directly call sayMauForPlayer with the specific player ID
+      setTimeout(() => this.gameActions.sayMauForPlayer(playerId), AI_TIMING.ANNOUNCEMENT_DELAY);
     }
   }
 
@@ -209,7 +255,12 @@ export class AIService {
     const playerId = player.id;
     
     setTimeout(() => {
+      // Reset guard BEFORE playCard
+      this.aiTurnInProgress = false;
       this.gameActions.playCard(jack);
+      
+      // Check Mau AFTER playing Jack (if hand reduced to 1)
+      this.checkMauAfterPlay(playerId);
 
       // Choose suit based on remaining cards
       setTimeout(() => {
@@ -258,6 +309,8 @@ export class AIService {
   private drawCards(state: GameState): void {
     const requiredCount = state.drawPenalty > 0 ? state.drawPenalty : 1;
     const wasDrawPenalty = state.drawPenalty > 0;
+    // Save activeAce state BEFORE drawing (it gets reset by drawCard)
+    const wasActiveAce = state.activeAce;
 
     const drawNext = (count: number) => {
       if (count > 0) {
@@ -268,7 +321,27 @@ export class AIService {
         if (wasDrawPenalty) {
           this.gameActions.resetDrawPenalty();
         }
-        setTimeout(() => this.gameActions.endTurn(), AI_TIMING.END_TURN_DELAY);
+        
+        // If Ace was active, AI gets another turn instead of ending
+        if (wasActiveAce) {
+          this.aiTurnInProgress = false;
+          setTimeout(() => this.gameActions.triggerAIPlay(), AI_TIMING.TURN_DELAY);
+          return;
+        }
+        
+        // After drawing, check if AI can now play a card
+        const currentState = this.gameActions.getState();
+        const currentPlayer = currentState.players[currentState.currentPlayerIndex];
+        const playableCards = currentPlayer.hand.filter(card => this.gameActions.canPlayCard(card));
+        
+        if (playableCards.length > 0) {
+          // AI can play a card after drawing - trigger another turn
+          this.aiTurnInProgress = false;
+          setTimeout(() => this.gameActions.triggerAIPlay(), AI_TIMING.TURN_DELAY);
+        } else {
+          // No playable card - end turn
+          setTimeout(() => this.gameActions.endTurn(), AI_TIMING.END_TURN_DELAY);
+        }
       }
     };
 
@@ -287,6 +360,7 @@ export interface AIGameActions {
   endTurn(): void;
   chooseSuit(suit: Suit): void;
   sayMau(): void;
+  sayMauForPlayer(playerId: string): void;
   sayMauMau(): void;
   announceQueenRound(): void;
   endQueenRound(): void;

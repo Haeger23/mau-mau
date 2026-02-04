@@ -44,13 +44,16 @@ export class GameService implements AIGameActions {
     'MAUMAU_FALSE': '§10.B MAU-MAU: Falsche Mau-Mau-Ansage - Spieler ist nicht am Ende des Spiels.',
     'QUEEN_MISSED': '§9.A DAMENRUNDE: Falls dies vergessen wird, ist dies entweder mit einer Strafkarte zu ahnden oder der Zug wird nicht als Starten einer Damenrunde gewertet.',
     'QUEEN_FALSE': '§9.A DAMENRUNDE: Falsche Damenrunde-Ansage - Spieler hat nicht mindestens zwei echte Damen auf der Hand.',
+    'QUEEN_NOT_PLAYED': '§9.A DAMENRUNDE: Eine Damenrunde muss mit einer echten Dame beginnen. Eine 10 (Replikator) zählt hier nicht!',
     'QUEEN_END_MISSED': '§9.A DAMENRUNDE: Falls ein Spieler vergisst eine Damenrunde zu beenden, muss ebenfalls eine Strafkarte gezogen werden.',
     'QUEEN_END_FALSE': '§9.A DAMENRUNDE: Nur der Spieler, welcher die Damenrunde gestartet hat, darf das Ende der Damenrunde ausrufen.',
+    'QUEEN_FORGOT_TO_END': '§9.A DAMENRUNDE: Eine Damenrunde muss mit einer echten Dame beendet werden. Eine 10 (Replikator) zählt hier nicht!',
     'ACE_LAST_CARD': 'ASS-REGEL: Durch die Pflicht des Spielens, kann ein Spiel nicht mit einem Ass beendet werden.',
     'JACK_REPLICATION': '§7 BUBE: Bube auf Bube geht nicht! Eine 10 die einen Buben repliziert, verletzt diese Regel.',
     'SEVEN_ESCAPE': '§6 SIEBENER-KETTE: Ein Spieler kann einer Siebener-Strafe entkommen, indem er selbst eine 7 spielt. Alternativ kann auch eine 10 gespielt werden, die die 7 repliziert. Die Strafkarten akkumulieren sich dann (+2) und gehen an den nächsten Spieler weiter.',
     'INVALID_CARD_PLAYED': '§2 SPIELPFLICHT: Eine ungültige Karte wurde gespielt. Die Karte passt nicht auf die ausliegende Karte.',
-    'TURN_ENDED_TOO_EARLY': '§2 SPIELPFLICHT: Der Zug wurde vorzeitig beendet. Es fehlt noch eine Aktion (z.B. Karte spielen, Karten ziehen, Mau sagen).'
+    'TURN_ENDED_TOO_EARLY': '§2 SPIELPFLICHT: Der Zug wurde vorzeitig beendet. Es fehlt noch eine Aktion (z.B. Karte spielen, Karten ziehen, Mau sagen).',
+    'PENALTY_SKIPPED_NO_CARDS': '§4 STRAFKARTEN: Wenn der Nachziehstapel leer ist und keine Karten mehr nachgemischt werden können, entfällt die Strafe. Dies kann passieren wenn viele Spieler am Tisch sind und viele Karten auf den Händen bzw. als Strafkarten verteilt wurden.'
   };
 
   private createInitialState(): GameState {
@@ -229,21 +232,33 @@ export class GameService implements AIGameActions {
     const player = state.players.find(p => p.id === playerId);
     if (!player) return;
 
+    let actualCount = 0;
+    
     // Ziehe Strafkarten vom Deck
     for (let i = 0; i < count; i++) {
+      // Prüfe ob Deck leer ist
       if (state.deck.length === 0) {
+        // Versuche nachzumischen
         this.reshuffleDeck();
         // Get updated state after reshuffle
         const updatedState = this.gameState();
         state.deck = updatedState.deck;
         state.discardPile = updatedState.discardPile;
       }
+      
+      // Wenn Deck immer noch leer ist (alle Karten verteilt), entfällt die Strafe
+      if (state.deck.length === 0) {
+        // Keine Karten mehr verfügbar - Strafe entfällt für restliche Karten
+        break;
+      }
+      
       const card = state.deck.pop();
       if (card) {
         // Neue Strafkarten gehen zu lockedPenaltyCards
         // Sie werden erst nach einem gültigen Zug zu pickupablePenaltyCards
         player.lockedPenaltyCards.push(card);
         player.penaltyCards.push(card); // deprecated - für Rückwärtskompatibilität
+        actualCount++;
       }
     }
 
@@ -252,12 +267,31 @@ export class GameService implements AIGameActions {
     state.turnPhase = 'WAITING_FOR_ACTION';
 
     // Log mit Regel-Erklärung
-    this.addChatLog(
-      player.name,
-      `erhält ${count} Strafkarte(n): ${reason}`,
-      'penalty',
-      ruleKey
-    );
+    if (actualCount === 0) {
+      // Strafe komplett entfallen - keine Karten mehr
+      this.addChatLog(
+        player.name,
+        `hat Glück gehabt! 🍀 Strafe entfällt (${reason}) - der Nachziehstapel ist leer`,
+        'play',
+        'PENALTY_SKIPPED_NO_CARDS'
+      );
+    } else if (actualCount < count) {
+      // Strafe teilweise entfallen
+      this.addChatLog(
+        player.name,
+        `erhält ${actualCount} von ${count} Strafkarte(n): ${reason} (Rest entfällt - keine Karten mehr)`,
+        'penalty',
+        ruleKey
+      );
+    } else {
+      // Volle Strafe
+      this.addChatLog(
+        player.name,
+        `erhält ${count} Strafkarte(n): ${reason}`,
+        'penalty',
+        ruleKey
+      );
+    }
 
     this.gameState.set({ ...state });
   }
@@ -357,22 +391,24 @@ export class GameService implements AIGameActions {
 
   canPlayCard(card: Card): boolean {
     // Use the RuleEngine for card validation
-    return this.ruleEngine.isCardPlayable(card, this.gameState());
+    const state = this.gameState();
+    console.log(`[canPlayCard] Checking card ${card.rank} ${card.suit}, chosenSuit is: ${state.chosenSuit}`);
+    return this.ruleEngine.isCardPlayable(card, state);
   }
 
   playCard(card: Card, additionalCard?: Card | Card[]): void {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
     
-    // DAMENRUNDE REGEL: Nach Ankündigung MUSS erste Karte Dame oder 10 sein
-    // (10 kann jede Karte replizieren, also auch eine Dame)
+    // DAMENRUNDE REGEL: Nach Ankündigung MUSS erste Karte eine ECHTE Dame sein
+    // (10 als Replikator zählt hier NICHT - Damenrunde muss mit Dame beginnen!)
     if (state.queenRoundNeedsFirstQueen && currentPlayer.isQueenRoundStarter) {
-      if (card.rank !== 'Q' && card.rank !== '10') {
+      if (card.rank !== 'Q') {
         // Karte zurück auf die Hand
         this.assignPenaltyCards(
           currentPlayer.id,
           1,
-          'Damenrunde angekündigt, aber keine Dame gespielt',
+          'Damenrunde muss mit einer echten Dame beginnen (keine 10!)',
           'QUEEN_NOT_PLAYED'
         );
         // Damenrunde abbrechen
@@ -382,6 +418,12 @@ export class GameService implements AIGameActions {
         currentPlayer.inQueenRound = false;
         currentPlayer.isQueenRoundStarter = false;
         this.gameState.set({ ...state });
+        
+        // Für KI: Triggere erneut den KI-Zug nach kurzer Verzögerung
+        if (!currentPlayer.isHuman) {
+          this.aiService.resetGuard();
+          setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
+        }
         return;
       }
       // Dame oder 10 wurde gespielt - Flag zurücksetzen
@@ -472,7 +514,18 @@ export class GameService implements AIGameActions {
       this.gameState.set({ ...state });
       
       // Wende den Effekt der OBERSTEN Karte an (nicht der 9)
-      this.applyCardEffect(topCard);
+      const nineBaseMoveValid = this.applyCardEffect(topCard);
+      
+      // If move was invalid (e.g., 10 replicated Jack), player stays active
+      if (!nineBaseMoveValid) {
+        // Für KI: Triggere erneut den KI-Zug nach kurzer Verzögerung
+        if (!currentPlayer.isHuman) {
+          this.aiService.resetGuard();
+          setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
+        }
+        // Spieler bleibt am Zug - KEIN nextTurn()
+        return;
+      }
       
       // State nach Effekt holen
       const stateAfterEffect = this.gameState();
@@ -529,11 +582,8 @@ export class GameService implements AIGameActions {
         this.gameState.set({ ...finalState });
       }
       
-      // Zug beenden
-      if (!currentPlayerAfter.isHuman) {
-        this.nextTurn();
-      }
-      
+      // Zug beenden (für alle Spieler)
+      this.nextTurn();
       return;
     }
     
@@ -612,7 +662,18 @@ export class GameService implements AIGameActions {
       this.gameState.set({ ...state });
     }
     
-    this.applyCardEffect(card);
+    const moveValid = this.applyCardEffect(card);
+    
+    // If move was invalid (e.g., 10 replicated Jack), player stays active
+    if (!moveValid) {
+      // Für KI: Triggere erneut den KI-Zug nach kurzer Verzögerung
+      if (!currentPlayer.isHuman) {
+        this.aiService.resetGuard();
+        setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
+      }
+      // Spieler bleibt am Zug - KEIN nextTurn()
+      return;
+    }
 
     // Check for win condition
     if (currentPlayer.hand.length === 0) {
@@ -636,12 +697,13 @@ export class GameService implements AIGameActions {
 
     // DAMENRUNDE: Prüfe ob Starter vergessen hat zu beenden
     // Wenn Starter eine Nicht-Dame spielt während Damenrunde aktiv -> Auto-Ende + Strafe
-    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter && card.rank !== 'Q' && card.rank !== '10') {
+    // (10 zählt hier NICHT als Dame - Damenrunde muss mit echter Dame enden!)
+    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter && card.rank !== 'Q') {
       // Starter hat keine Dame mehr gespielt -> Damenrunde automatisch beenden + Strafe
       this.assignPenaltyCards(
         currentPlayer.id,
         1,
-        'Damenrunde nicht beendet (keine Dame mehr gespielt)',
+        'Damenrunde nicht mit Dame beendet',
         'QUEEN_FORGOT_TO_END'
       );
       
@@ -668,6 +730,7 @@ export class GameService implements AIGameActions {
       // Für Menschen: Warte auf manuelles "Zug beenden"
       // Für KI: Automatisch weiter
       if (!currentPlayer.isHuman) {
+        console.log(`[playCard] AI ${currentPlayer.name} finished playing ${card.rank}, calling nextTurn()`);
         this.nextTurn();
       }
       // Menschlicher Spieler muss "Zug beenden" klicken
@@ -683,7 +746,11 @@ export class GameService implements AIGameActions {
     }
   }
 
-  private applyCardEffect(card: Card): void {
+  /**
+   * Apply the effect of a card
+   * @returns true if the move was valid, false if the card was returned to hand
+   */
+  private applyCardEffect(card: Card): boolean {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
 
@@ -732,6 +799,9 @@ export class GameService implements AIGameActions {
               currentPlayer.hand.push(ten); // Zurück auf die Hand
             }
             
+            // Erst State committen mit der zurückgegebenen Karte
+            this.gameState.set({ ...state });
+            
             this.addChatLog(currentPlayer.name, 'repliziert Bube (Bube auf Bube verboten!) - Karte zurück', 'penalty');
             this.assignPenaltyCards(
               currentPlayer.id,
@@ -740,12 +810,10 @@ export class GameService implements AIGameActions {
               'JACK_REPLICATION'
             );
             
-            // Zug ist ungültig - nächster Spieler
-            // Für KI automatisch, für Menschen manuell
-            if (!currentPlayer.isHuman) {
-              setTimeout(() => this.nextTurn(), AI_TIMING.TURN_DELAY);
-            }
-            break;
+            // Ungültiger Zug - Spieler bleibt am Zug und muss weiterspielen
+            // Return false to indicate invalid move
+            // State wurde bereits durch assignPenaltyCards() mit turnPhase='WAITING_FOR_ACTION' committed
+            return false;
           }
           
           // Effekt der Karte darunter anwenden
@@ -807,6 +875,7 @@ export class GameService implements AIGameActions {
     }
 
     this.gameState.set({ ...state });
+    return true; // Valid move
   }
 
   chooseSuit(suit: Suit): void {
@@ -829,7 +898,9 @@ export class GameService implements AIGameActions {
     state.chosenSuit = suit;
     state.awaitingSuitChoice = false; // Farbwahl abgeschlossen
     state.turnPhase = 'SUIT_CHOSEN';
+    console.log(`[chooseSuit] Setting chosenSuit to: ${suit}`);
     this.gameState.set({ ...state });
+    console.log(`[chooseSuit] After set, chosenSuit is: ${this.gameState().chosenSuit}`);
     
     // Für Menschen: Warte auf manuelles "Zug beenden"
     // Für KI: Automatisch weiter
@@ -900,21 +971,15 @@ export class GameService implements AIGameActions {
     this.gameState.set({ ...state });
 
     // Prüfe, ob Spieler nach dem Ziehen noch legen kann (nur bei normalem Ziehen)
-    if (currentPlayer.requiredDrawCount === 0) {
+    // WICHTIG: Für KI wird dies vom AI-Service gesteuert, nicht hier!
+    // Diese Logik ist nur für menschliche Spieler relevant (UI-Feedback)
+    if (currentPlayer.requiredDrawCount === 0 && currentPlayer.isHuman) {
       const playableCards = currentPlayer.hand.filter(card => this.canPlayCard(card));
-      if (playableCards.length > 0) {
-        // Spieler bleibt am Zug
-        if (!currentPlayer.isHuman) {
-          const cardToPlay = playableCards[0];
-          this.playCard(cardToPlay);
-        }
-      } else {
-        // Keine passende Karte, Zug endet
-        // Für KI automatisch, für Menschen manuell
-        if (!currentPlayer.isHuman) {
-          this.nextTurn();
-        }
+      if (playableCards.length === 0) {
+        // Keine passende Karte - Mensch muss manuell "Zug beenden" klicken
+        // (turnPhase ist bereits 'DRAW_COMPLETE', also kann er das)
       }
+      // Wenn spielbar: Mensch kann entscheiden ob spielen oder beenden
     }
   }
 
@@ -1026,20 +1091,30 @@ export class GameService implements AIGameActions {
 
   private nextTurn(): void {
     const state = this.gameState();
+    console.log(`[nextTurn] Before nextTurn, chosenSuit is: ${state.chosenSuit}`);
 
     // Reset turn phase and lastPlayerAction for new turn
     state.turnPhase = 'WAITING_FOR_ACTION';
     state.lastPlayerAction = null;
     state.activeAce = false; // Reset Ass-Flag für nächsten Spieler
 
-    // Handle skip
+    // Handle skip: skip next player and move to player after
+    // In 2-player game: skip advances by 1 (to the other player, who then gets skipped)
+    // In 3+ player game: skip advances by 2 (skip next, play the one after)
     if (state.skipNext) {
       state.skipNext = false;
+      if (state.players.length === 2) {
+        // 2-player: advance by 1, then the skipped player's turn is simply skipped
+        // The player who played 8 already ended their turn, so next player is skipped
+        state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+      } else {
+        // 3+ players: advance by 2 to skip next player
+        state.currentPlayerIndex = (state.currentPlayerIndex + 2) % state.players.length;
+      }
+    } else {
+      // Move to next player
       state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     }
-
-    // Move to next player
-    state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
 
     // Update active player
     state.players.forEach((p, i) => {
@@ -1047,6 +1122,7 @@ export class GameService implements AIGameActions {
     });
 
     this.gameState.set({ ...state });
+    console.log(`[nextTurn] After nextTurn, chosenSuit is: ${this.gameState().chosenSuit}`);
 
     // If next player is AI, play automatically after a delay
     const currentPlayer = state.players[state.currentPlayerIndex];
@@ -1126,6 +1202,37 @@ export class GameService implements AIGameActions {
   }
 
   /**
+   * Say "Mau" for a specific player (used by AI)
+   * This is needed because sayMau() uses currentPlayer which might have changed after nextTurn()
+   */
+  sayMauForPlayer(playerId: string): void {
+    const state = this.gameState();
+    const player = state.players.find(p => p.id === playerId);
+    
+    if (!player) return;
+
+    if (player.hasSaidMau) {
+      // Bereits gesagt - ignoriere
+      return;
+    }
+
+    // Prüfe ob Ansage korrekt ist (genau 1 Karte)
+    if (player.hand.length === 1) {
+      player.hasSaidMau = true;
+      this.addChatLog(player.name, 'sagt "Mau"', 'mau', 'MAU_SAID');
+      this.gameState.set({ ...state });
+    } else {
+      // Falsch-Ansage: +1 Strafkarte
+      this.assignPenaltyCards(
+        playerId,
+        1,
+        `"Mau" falsch gesagt (${player.hand.length} Karten statt 1)`,
+        'MAU_FALSE'
+      );
+    }
+  }
+
+  /**
    * §10.A: "Mau-Mau"-Ansage NUR wenn letzte Karte ein Bube war
    * Darf NICHT gesagt werden wenn letzte Karte kein Bube ist
    * Falsch-Ansage: +1 Strafkarte
@@ -1171,8 +1278,8 @@ export class GameService implements AIGameActions {
 
   /**
    * Damenrunde ankündigen
-   * Bedingung: mindestens 2 Damen auf der Hand
-   * Falsch-Ansage: +2 Strafkarten
+   * Bedingung: mindestens 2 Damen auf der Hand UND mindestens eine Dame muss spielbar sein
+   * Falsch-Ansage: +1 Strafkarte
    */
   announceQueenRound(): void {
     const state = this.gameState();
@@ -1187,36 +1294,87 @@ export class GameService implements AIGameActions {
         'Damenrunde bereits aktiv',
         'QUEEN_FALSE'
       );
+      // Für KI: Triggere erneut den KI-Zug
+      if (!currentPlayer.isHuman) {
+        this.aiService.resetGuard();
+        setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
+      }
       return;
     }
 
     // Zähle Damen auf der Hand
-    const queenCount = currentPlayer.hand.filter(c => c.rank === 'Q').length;
+    const queens = currentPlayer.hand.filter(c => c.rank === 'Q');
+    const queenCount = queens.length;
 
-    if (queenCount >= 2) {
-      // Korrekte Ansage
-      state.queenRoundActive = true;
-      state.queenRoundStarterId = currentPlayer.id;
-      state.queenRoundNeedsFirstQueen = true; // Nächste Karte MUSS Dame sein
-      currentPlayer.inQueenRound = true;
-      currentPlayer.isQueenRoundStarter = true;
-      
-      this.addChatLog(
-        currentPlayer.name, 
-        'kündigt Damenrunde an', 
-        'queen-round', 
-        'QUEEN_ROUND_ANNOUNCED'
-      );
-      this.gameState.set({ ...state });
-    } else {
-      // Falsch-Ansage: +1 Strafkarte (nicht +2, da Button immer klickbar)
+    if (queenCount < 2) {
+      // Falsch-Ansage: nicht genug Damen
       this.assignPenaltyCards(
         currentPlayer.id,
         1,
         `Damenrunde falsch angekündigt (nur ${queenCount} Dame(n) statt mind. 2)`,
         'QUEEN_FALSE'
       );
+      // Für KI: Triggere erneut den KI-Zug
+      if (!currentPlayer.isHuman) {
+        this.aiService.resetGuard();
+        setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
+      }
+      return;
     }
+
+    // Prüfe ob mindestens eine Dame spielbar ist
+    // Wichtig: Wir prüfen die Standard-Spielbarkeit OHNE Damenrunden-Regeln
+    const topCard = state.discardPile[state.discardPile.length - 1];
+    
+    // Rekursiv nach der echten Karte suchen (falls 10er-Replikation)
+    let cardToMatch = topCard;
+    let searchIndex = state.discardPile.length - 1;
+    while (cardToMatch && cardToMatch.rank === '10' && searchIndex > 0) {
+      searchIndex--;
+      cardToMatch = state.discardPile[searchIndex];
+    }
+    
+    // Prüfe ob eine Dame spielbar ist:
+    // - Bei chosenSuit: Dame muss diese Farbe haben
+    // - Sonst: Dame muss Farbe oder Rang (Q) mit cardToMatch teilen
+    const hasPlayableQueen = queens.some(queen => {
+      if (state.chosenSuit) {
+        return queen.suit === state.chosenSuit;
+      }
+      // Dame passt wenn Farbe übereinstimmt (Rang Q auf Q wäre eh erlaubt)
+      return queen.suit === cardToMatch?.suit || cardToMatch?.rank === 'Q';
+    });
+
+    if (!hasPlayableQueen) {
+      // Falsch-Ansage: keine Dame passt auf den Stapel
+      this.assignPenaltyCards(
+        currentPlayer.id,
+        1,
+        'Damenrunde falsch angekündigt (keine Dame passt auf den Stapel)',
+        'QUEEN_FALSE'
+      );
+      // Für KI: Triggere erneut den KI-Zug
+      if (!currentPlayer.isHuman) {
+        this.aiService.resetGuard();
+        setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
+      }
+      return;
+    }
+
+    // Korrekte Ansage
+    state.queenRoundActive = true;
+    state.queenRoundStarterId = currentPlayer.id;
+    state.queenRoundNeedsFirstQueen = true; // Nächste Karte MUSS Dame sein
+    currentPlayer.inQueenRound = true;
+    currentPlayer.isQueenRoundStarter = true;
+    
+    this.addChatLog(
+      currentPlayer.name, 
+      'kündigt Damenrunde an', 
+      'queen-round', 
+      'QUEEN_ROUND_ANNOUNCED'
+    );
+    this.gameState.set({ ...state });
   }
 
   /**

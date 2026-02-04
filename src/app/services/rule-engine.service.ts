@@ -63,22 +63,32 @@ export class RuleEngine {
       return false;
     }
 
-    // 10er-Replikator: 10 kann IMMER gespielt werden (repliziert die ausliegende Karte)
-    // Ausnahme: Nicht auf Bube (siehe oben) und nicht bei Strafkarten/Damenrunde (siehe oben)
+    // 10 auf Bube ist AUCH nicht erlaubt (10 würde den Buben replizieren = Bube auf Bube)
+    if (topCard.rank === 'J' && card.rank === '10') {
+      return false;
+    }
+
+    // 10er-Replikator: 10 kann auf alle anderen Karten gespielt werden
+    // (Bube-Fall wurde oben schon abgefangen)
     if (card.rank === '10') return true;
 
     // Bube kann auf alles gelegt werden (außer auf einen anderen Buben und bei Strafkarten)
     if (card.rank === 'J') return true;
 
     // WICHTIG: Wenn die oberste Karte eine 10 ist, repliziert sie die Karte darunter
-    // Also müssen wir gegen die Karte darunter prüfen, nicht gegen die 10
+    // Bei mehreren 10ern übereinander müssen wir rekursiv nach unten suchen
     let cardToMatch = topCard;
-    if (topCard.rank === '10' && state.discardPile.length >= 2) {
-      cardToMatch = state.discardPile[state.discardPile.length - 2];
+    let searchIndex = state.discardPile.length - 1;
+    
+    // Rekursiv nach unten suchen bis wir eine Nicht-10 finden
+    while (cardToMatch.rank === '10' && searchIndex > 0) {
+      searchIndex--;
+      cardToMatch = state.discardPile[searchIndex];
     }
 
     // Nach einem Buben: Nur Karten der gewählten Farbe
     if (state.chosenSuit) {
+      console.log(`[isCardPlayable] chosenSuit is ${state.chosenSuit}, card.suit is ${card.suit}`);
       return card.suit === state.chosenSuit;
     }
 

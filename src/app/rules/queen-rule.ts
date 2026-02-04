@@ -4,8 +4,10 @@ import { CardRule } from './card-rule.interface';
 
 /**
  * Schweizer Mau-Mau: Damenrunde
- * Queens have no special effect on their own, but they are the only cards
- * (along with 10s) that can be played during an active Queen Round.
+ * Queens are the only cards that can start and end a Queen Round.
+ * During an active Queen Round, only Queens and 10s can be played.
+ * Important: A Queen Round must BEGIN and END with a real Queen - 
+ * a 10 (replicator) cannot be used to start or end the round!
  */
 export class QueenRule implements CardRule {
   isApplicable(card: Card): boolean {
