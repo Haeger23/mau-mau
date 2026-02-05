@@ -20,6 +20,7 @@ export class GameBoardComponent implements AfterViewChecked {
 
   protected selectedCard = signal<Card | null>(null);
   protected showSuitSelector = signal<boolean>(false);
+  protected showWinOverlay = signal<boolean>(true);
   protected hoverAvatarUrl = signal<string | null>(null);
   protected hoverAvatarPosition = signal<{ x: number, y: number } | null>(null);
   private hoverTimeout: any = null;
@@ -125,10 +126,17 @@ export class GameBoardComponent implements AfterViewChecked {
     this.gameService.startNewGame(playerNames);
     this.selectedCard.set(null);
     this.showSuitSelector.set(false);
+    this.showWinOverlay.set(true);
   }
 
   backToStart(): void {
     this.returnToStart.emit();
+  }
+
+  closeWinOverlay(): void {
+    // Schließt nur das Overlay, ohne das Spiel zurückzusetzen
+    // Der Benutzer kann sich die Partie weiter anschauen
+    this.showWinOverlay.set(false);
   }
 
   canPlayCard(card: Card): boolean {

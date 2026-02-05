@@ -86,7 +86,6 @@ import { Suit } from '../../models/card.model';
     }
 
     .suit-button:hover {
-      transform: scale(1.1);
       border-color: #4CAF50;
       box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     }
@@ -106,14 +105,14 @@ import { Suit } from '../../models/card.model';
     [data-suit="hearts"] .suit-name,
     [data-suit="diamonds"] .suit-symbol,
     [data-suit="diamonds"] .suit-name {
-      color: #e74c3c;
+      color: #ff0000;
     }
 
     [data-suit="clubs"] .suit-symbol,
     [data-suit="clubs"] .suit-name,
     [data-suit="spades"] .suit-symbol,
     [data-suit="spades"] .suit-name {
-      color: #2c3e50;
+      color: #000000;
     }
   `]
 })

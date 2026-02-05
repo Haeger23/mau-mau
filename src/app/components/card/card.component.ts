@@ -33,7 +33,6 @@ import { Card } from '../../models/card.model';
       width: 120px;
       height: 168px;
       background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
-      border: 3px solid #1a1a1a;
       border-radius: 12px;
       position: relative;
       box-shadow: 
@@ -147,19 +146,19 @@ import { Card } from '../../models/card.model';
 
     [data-suit="hearts"] .rank,
     [data-suit="hearts"] .suit {
-      color: #DC143C;
-      text-shadow: 0 1px 2px rgba(220, 20, 60, 0.3);
+      color: #ff0000;
+      text-shadow: 0 1px 2px rgba(255, 0, 0, 0.3);
     }
 
     [data-suit="diamonds"] .rank,
     [data-suit="diamonds"] .suit {
-      color: #FF4500;
-      text-shadow: 0 1px 2px rgba(255, 69, 0, 0.3);
+      color: #ff0000;
+      text-shadow: 0 1px 2px rgba(255, 0, 0, 0.3);
     }
 
     [data-suit="clubs"] .rank,
     [data-suit="clubs"] .suit {
-      color: #1a1a1a;
+      color: #000000;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
@@ -171,14 +170,14 @@ import { Card } from '../../models/card.model';
 
     [data-suit="hearts"] .suit-large,
     [data-suit="diamonds"] .suit-large {
-      color: #DC143C;
-      text-shadow: 0 2px 4px rgba(220, 20, 60, 0.3);
-      filter: drop-shadow(0 2px 4px rgba(220, 20, 60, 0.2));
+      color: #ff0000;
+      text-shadow: 0 2px 4px rgba(255, 0, 0, 0.3);
+      filter: drop-shadow(0 2px 4px rgba(255, 0, 0, 0.2));
     }
 
     [data-suit="clubs"] .suit-large,
     [data-suit="spades"] .suit-large {
-      color: #1a1a1a;
+      color: #000000;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }

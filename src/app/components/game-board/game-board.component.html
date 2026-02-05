@@ -235,11 +235,14 @@
       }
 
       <!-- Win Screen -->
-      @if (gameState().gameOver && gameState().winner) {
-        <div class="win-overlay">
-          <div class="win-message">
+      @if (gameState().gameOver && gameState().winner && showWinOverlay()) {
+        <div class="win-overlay" (click)="closeWinOverlay()">
+          <div class="win-message" (click)="$event.stopPropagation()">
             <h2 data-testid="game-winner">🎉 {{ gameState().winner!.name }} gewinnt! 🎉</h2>
-            <button class="new-game-btn large" data-testid="action-new-game" (click)="backToStart()">Zurück zum Startbildschirm</button>
+            <div class="win-buttons">
+              <button class="win-btn close-btn" data-testid="action-close-overlay" (click)="closeWinOverlay()">Partie anschauen</button>
+              <button class="win-btn start-btn" data-testid="action-new-game" (click)="backToStart()">Zurück zum Start</button>
+            </div>
           </div>
         </div>
       }
