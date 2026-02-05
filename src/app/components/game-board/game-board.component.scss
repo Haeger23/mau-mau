@@ -1,6 +1,6 @@
 .game-board {
   min-height: 100vh;
-  background: linear-gradient(136deg, #a30000 0%, #4c0000 100%);
+  background: linear-gradient(136deg, #ff0000 0%, #4c0000 100%);
   padding: 1em; /* 12px */
   font-family: sans-serif;
 }
@@ -143,6 +143,7 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 26.667em; /* game-main flexibel, chat-log 320px */
   gap: 1.333em; /* 16px */
+  padding-top: 4em;
 }
 
 .game-main {

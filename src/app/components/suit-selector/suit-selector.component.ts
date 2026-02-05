@@ -92,7 +92,6 @@ import { Suit } from '../../models/card.model';
 
     .suit-symbol {
       font-size: 4em; /* 48px */
-      margin-bottom: 0.667em; /* 8px */
     }
 
     .suit-name {
