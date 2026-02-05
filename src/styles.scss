@@ -88,7 +88,6 @@ button {
   transition: all var(--transition-base);
   
   &:hover:not(:disabled) {
-    background: var(--color-primary);
     color: var(--color-secondary);
   }
   

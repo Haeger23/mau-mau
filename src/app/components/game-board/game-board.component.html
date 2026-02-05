@@ -109,7 +109,7 @@
           }
           @if (gameState().queenRoundActive) {
             <div class="status-message queen">
-              👑 Damenrunde aktiv - Nur Damen & 10er!
+              Damenrunde aktiv - Nur Damen & 10er!
             </div>
           }
         </div>
@@ -195,7 +195,7 @@
                 <span class="badge mau-mau">MAU-MAU</span>
               }
               @if (humanPlayer()!.inQueenRound) {
-                <span class="badge queen">👑 In Damenrunde</span>
+                <span class="badge queen">In Damenrunde</span>
               }
             </div>
           </div>
@@ -221,7 +221,7 @@
                 class="action-btn queen-btn"
                 data-testid="action-queen-round"
                 (click)="onAnnounceQueenRound()">
-                👑 Damenrunde
+                Damenrunde
               </button>
               <button 
                 class="action-btn queen-end-btn"

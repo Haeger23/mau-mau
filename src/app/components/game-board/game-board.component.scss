@@ -9,7 +9,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.333em; /* 16px */
+  margin: 0 auto 1.333em; /* 16px */
+  max-width: 133.333em;
 }
 
 .header-logo {
@@ -139,7 +140,8 @@ h1 {
 .game-area {
   max-width: 133.333em; /* 1600px */
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 26.667em; /* game-main flexibel, chat-log 320px */
   gap: 1.333em; /* 16px */
 }
 
@@ -495,7 +497,6 @@ h1 {
   gap: 0.333em; /* 4px */
   margin-top: 0.5em; /* 6px */
   padding: 0.5em 0.667em; /* 6px 8px */
-  background: rgba(0, 0, 0, 0.1);
   border-radius: 0.333em; /* 4px */
   flex-wrap: wrap;
   justify-content: center;
@@ -536,6 +537,7 @@ h1 {
   padding: 0;
   cursor: default;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   // Ornament pattern background - scales with card size
   background-image:
@@ -575,7 +577,8 @@ h1 {
     cursor: pointer;
 
     &:hover {
-      box-shadow: 0 0.333em 0.667em rgba(0, 0, 0, 0.3); /* 0 4px 8px */
+      transform: translateY(-0.5em); /* -6px */
+      box-shadow: 0 0.5em 1em rgba(0, 0, 0, 0.3); /* 0 6px 12px */
     }
 
     &:focus {
@@ -675,6 +678,7 @@ h1 {
       0.167em 0.167em 0 rgba(0, 0, 0, 0.1), /* 2px 2px */
       0.333em 0.333em 0 rgba(0, 0, 0, 0.1), /* 4px 4px */
       0.5em 0.5em 0 rgba(0, 0, 0, 0.1); /* 6px 6px */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -730,6 +734,11 @@ h1 {
 
 .deck {
   cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-1em); /* -12px */
+  }
 }
 
 .deck-label, .discard-label {
