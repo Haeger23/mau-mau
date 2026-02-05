@@ -47,19 +47,19 @@ import { Suit } from '../../models/card.model';
 
     .suit-selector {
       background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      padding: 2.5em; /* 30px */
+      border-radius: 1em; /* 12px */
+      box-shadow: 0 0.833em 3.333em rgba(0, 0, 0, 0.3); /* 0 10px 40px */
       animation: slideUp 0.3s ease;
     }
 
     @keyframes slideUp {
-      from { transform: translateY(50px); opacity: 0; }
+      from { transform: translateY(4.167em); opacity: 0; } /* 50px */
       to { transform: translateY(0); opacity: 1; }
     }
 
     h3 {
-      margin: 0 0 20px 0;
+      margin: 0 0 1.667em 0; /* 0 0 20px 0 */
       text-align: center;
       color: #2c3e50;
     }
@@ -67,14 +67,14 @@ import { Suit } from '../../models/card.model';
     .suits {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
+      gap: 1.25em; /* 15px */
     }
 
     .suit-button {
-      width: 120px;
-      height: 120px;
-      border: 3px solid #ddd;
-      border-radius: 8px;
+      width: 10em; /* 120px */
+      height: 10em; /* 120px */
+      border: 0.25em solid #ddd; /* 3px */
+      border-radius: 0.667em; /* 8px */
       background: white;
       cursor: pointer;
       display: flex;
@@ -87,16 +87,16 @@ import { Suit } from '../../models/card.model';
 
     .suit-button:hover {
       border-color: #4CAF50;
-      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      box-shadow: 0 0.333em 1em rgba(76, 175, 80, 0.3); /* 0 4px 12px */
     }
 
     .suit-symbol {
-      font-size: 48px;
-      margin-bottom: 8px;
+      font-size: 4em; /* 48px */
+      margin-bottom: 0.667em; /* 8px */
     }
 
     .suit-name {
-      font-size: 14px;
+      font-size: 1.167em; /* 14px */
       font-weight: bold;
       text-transform: uppercase;
     }

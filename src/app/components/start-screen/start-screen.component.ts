@@ -126,7 +126,7 @@ export interface GameSetup {
     /* Hero Section - großflächiges Rot wie mau-mau.ch */
     .hero-section {
       background: #ff0000;
-      padding: 60px 20px 60px;
+      padding: 5em 1.667em 5em; /* 60px 20px 60px */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -139,22 +139,21 @@ export interface GameSetup {
     }
 
     .logo-container {
-      max-width: 320px;
+      max-width: 26.667em; /* 320px */
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 1.667em; /* 20px */
     }
 
     .logo {
       width: 100%;
       height: auto;
-      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+      filter: drop-shadow(0 0.333em 0.667em rgba(0, 0, 0, 0.2)); /* 0 4px 8px */
     }
 
     .tagline {
       color: #ffffff;
       font-family: 'Lato', sans-serif;
-      font-size: 30px;
-      line-height: 40px;
+      font-size: 2.5em; /* 30px */
       font-weight: 900;
       letter-spacing: 0.1em;
       margin: 0;
@@ -168,29 +167,29 @@ export interface GameSetup {
       background: #ffffff;
       display: flex;
       justify-content: center;
-      padding: 40px 20px 0px;
+      padding: 3.333em 1.667em 0; /* 40px 20px 0px */
     }
 
     .settings-container {
       background: white;
-      border-radius: 16px;
-      padding: 40px;
-      max-width: 550px;
+      border-radius: 1.333em; /* 16px */
+      padding: 3.333em; /* 40px */
+      max-width: 45.833em; /* 550px */
       width: 100%;
       height: fit-content;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0.667em 2.667em rgba(0, 0, 0, 0.1); /* 0 8px 32px */
     }
 
     .setup-form {
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      gap: 2.333em; /* 28px */
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 0.833em; /* 10px */
     }
 
     label {
@@ -202,15 +201,15 @@ export interface GameSetup {
     .name-avatar-container {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 1.25em; /* 15px */
     }
 
     .player-avatar {
-      width: 100px;
-      height: 100px;
+      width: 8.333em; /* 100px */
+      height: 8.333em; /* 100px */
       border-radius: 50%;
       background: #fff5f5;
-      border: 3px solid #ff0000;
+      border: 0.25em solid #ff0000; /* 3px */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -225,13 +224,13 @@ export interface GameSetup {
     }
 
     .avatar-placeholder {
-      font-size: 48px;
+      font-size: 4em; /* 48px */
       color: #ff0000;
       font-weight: bold;
     }
 
     .avatar-letter {
-      font-size: 52px;
+      font-size: 4.333em; /* 52px */
       color: #ff0000;
       font-weight: bold;
     }
@@ -243,23 +242,23 @@ export interface GameSetup {
 
     .clear-btn {
       position: absolute;
-      right: 12px;
+      right: 1em; /* 12px */
       top: 50%;
       background: #e0e0e0;
       border: none;
       border-radius: 50%;
-      width: 24px;
-      height: 24px;
+      width: 2em; /* 24px */
+      height: 2em; /* 24px */
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 1.167em; /* 14px */
       color: #666;
       transition: background 0.2s ease, color 0.2s ease;
       padding: 0;
       line-height: 1;
-      margin-top: -12px;
+      margin-top: -1em; /* -12px */
 
       &:hover {
         background: #ff0000;
@@ -268,10 +267,10 @@ export interface GameSetup {
     }
 
     .name-input {
-      padding: 14px 18px;
-      font-size: 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
+      padding: 1.167em 1.5em; /* 14px 18px */
+      font-size: 1.333em; /* 16px */
+      border: 0.167em solid #e0e0e0; /* 2px */
+      border-radius: 0.667em; /* 8px */
       transition: all 0.2s ease;
       font-family: inherit;
       width: 100%;
@@ -280,7 +279,7 @@ export interface GameSetup {
     .name-input:focus {
       outline: none;
       border-color: #ff0000;
-      box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1);
+      box-shadow: 0 0 0 0.25em rgba(255, 0, 0, 0.1); /* 0 0 0 3px */
     }
 
     .suggestions-list {
@@ -289,20 +288,20 @@ export interface GameSetup {
       left: 0;
       right: 0;
       background: white;
-      border: 2px solid #ff0000;
+      border: 0.167em solid #ff0000; /* 2px */
       border-top: none;
-      border-radius: 0 0 8px 8px;
+      border-radius: 0 0 0.667em 0.667em; /* 0 0 8px 8px */
       list-style: none;
       margin: 0;
       padding: 0;
-      max-height: 200px;
+      max-height: 16.667em; /* 200px */
       overflow-y: auto;
       z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 0.333em 1em rgba(0, 0, 0, 0.15); /* 0 4px 12px */
     }
 
     .suggestion-item {
-      padding: 12px 18px;
+      padding: 1em 1.5em; /* 12px 18px */
       cursor: pointer;
       transition: background 0.2s ease;
       color: #333;
@@ -317,30 +316,30 @@ export interface GameSetup {
     }
 
     .player-thumbnail {
-      width: 32px;
-      height: 32px;
+      width: 2.667em; /* 32px */
+      height: 2.667em; /* 32px */
       border-radius: 50%;
       object-fit: cover;
-      margin-right: 12px;
-      border: 2px solid #e0e0e0;
+      margin-right: 1em; /* 12px */
+      border: 0.167em solid #e0e0e0; /* 2px */
     }
 
     .suggestion-item:last-child {
-      border-radius: 0 0 6px 6px;
+      border-radius: 0 0 0.5em 0.5em; /* 0 0 6px 6px */
     }
 
     .opponent-selector {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 0.833em; /* 10px */
     }
 
     .opponent-btn {
-      padding: 16px 12px;
-      font-size: 15px;
+      padding: 1.333em 1em; /* 16px 12px */
+      font-size: 1.25em; /* 15px */
       font-weight: 600;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
+      border: 0.167em solid #e0e0e0; /* 2px */
+      border-radius: 0.667em; /* 8px */
       background: white;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -361,19 +360,19 @@ export interface GameSetup {
     }
 
     .start-btn {
-      padding: 16px 40px;
-      font-size: 18px;
+      padding: 1.333em 3.333em; /* 16px 40px */
+      font-size: 1.5em; /* 18px */
       font-weight: 600;
       background: #ff0000;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 0.667em; /* 8px */
       cursor: pointer;
       transition: all 0.2s ease;
-      margin-top: 8px;
+      margin-top: 0.667em; /* 8px */
       font-family: inherit;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.083em; /* 1px */
     }
 
     .start-btn:hover:not(:disabled) {
@@ -388,23 +387,23 @@ export interface GameSetup {
 
     .rules-preview {
       text-align: center;
-      padding-top: 8px;
+      padding-top: 0.667em; /* 8px */
       text-transform: uppercase;
       font-weight: 900;
-      letter-spacing: 1px;
+      letter-spacing: 0.083em; /* 1px */
     }
 
     .rules-link {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 0.667em; /* 8px */
       color: #ff0000;
       text-decoration: none;
-      font-size: 15px;
+      font-size: 1.25em; /* 15px */
       font-weight: 500;
       transition: all 0.2s ease;
-      padding: 10px 16px;
-      border-radius: 6px;
+      padding: 0.833em 1.333em; /* 10px 16px */
+      border-radius: 0.5em; /* 6px */
     }
 
     .rules-link:hover {
@@ -412,17 +411,17 @@ export interface GameSetup {
     }
 
     .rules-link:focus {
-      outline: 2px solid #ff0000;
-      outline-offset: 2px;
+      outline: 0.167em solid #ff0000; /* 2px */
+      outline-offset: 0.167em; /* 2px */
     }
 
     @media (max-width: 600px) {
       .hero-section {
-        padding: 40px 20px 40px;
+        padding: 3.333em 1.667em 3.333em; /* 40px 20px 40px */
       }
 
       .logo-container {
-        max-width: 240px;
+        max-width: 20em; /* 240px */
       }
 
       .tagline {
@@ -430,8 +429,8 @@ export interface GameSetup {
       }
 
       .settings-container {
-        padding: 30px 20px;
-        margin-top: -30px;
+        padding: 2.5em 1.667em; /* 30px 20px */
+        margin-top: -2.5em; /* -30px */
       }
 
       .opponent-selector {
@@ -439,13 +438,13 @@ export interface GameSetup {
       }
 
       .player-avatar {
-        width: 80px;
-        height: 80px;
+        width: 6.667em; /* 80px */
+        height: 6.667em; /* 80px */
       }
 
       .avatar-placeholder,
       .avatar-letter {
-        font-size: 40px;
+        font-size: 3.333em; /* 40px */
       }
     }
   `]

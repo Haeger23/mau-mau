@@ -1,9 +1,26 @@
 <div class="game-board">
   <!-- Header -->
   <div class="game-header">
-    <h1>🎴 Mau-Mau (Schweizer Regeln)</h1>
-    <button class="back-btn" data-testid="action-back-to-start" (click)="backToStart()">← Zum Startbildschirm</button>
+    <img src="/mau-mau-logo.svg" alt="Mau-Mau" class="header-logo">
+    <button class="back-btn" 
+            data-testid="action-back-to-start" 
+            (click)="confirmBackToStart()"
+            aria-label="Spiel beenden">✕</button>
   </div>
+
+  <!-- Bestätigungsdialog -->
+  @if (showExitConfirmation()) {
+    <div class="confirmation-overlay" (click)="showExitConfirmation.set(false)">
+      <div class="confirmation-dialog" (click)="$event.stopPropagation()">
+        <h3>Spiel beenden?</h3>
+        <p>Möchtest du die aktuelle Partie wirklich beenden und zum Startbildschirm zurückkehren?</p>
+        <div class="confirmation-buttons">
+          <button class="confirm-btn cancel" (click)="showExitConfirmation.set(false)">Abbrechen</button>
+          <button class="confirm-btn confirm" (click)="backToStart()">Beenden</button>
+        </div>
+      </div>
+    </div>
+  }
 
   @if (gameState()) {
     <!-- Game Area -->

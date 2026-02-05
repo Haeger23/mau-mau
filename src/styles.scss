@@ -14,30 +14,30 @@
   --color-warning: #f57c00;
   --color-info: #1976d2;
   
-  // Spacing (kompakt)
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 24px;
+  // Spacing (kompakt) - 12px base = 1em
+  --spacing-xs: 0.333em;    // 4px
+  --spacing-sm: 0.667em;    // 8px
+  --spacing-md: 1em;        // 12px
+  --spacing-lg: 1.333em;    // 16px
+  --spacing-xl: 2em;        // 24px
   
-  // Typography
+  // Typography - 12px base
   --font-family: sans-serif;
-  --font-size-sm: 11px;
-  --font-size-base: 13px;
-  --font-size-lg: 15px;
-  --font-size-xl: 18px;
-  --font-size-xxl: 22px;
+  --font-size-sm: 0.917em;  // 11px
+  --font-size-base: 1em;    // 12px (Base)
+  --font-size-lg: 1.25em;   // 15px
+  --font-size-xl: 1.5em;    // 18px
+  --font-size-xxl: 1.833em; // 22px
   
   // Borders
-  --border-width: 2px;
-  --border-radius: 4px;
+  --border-width: 0.167em;  // 2px
+  --border-radius: 0.333em; // 4px
   --border-color: var(--color-primary);
   
   // Shadows
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 0.083em 0.167em rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 0.167em 0.333em rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 0.333em 0.667em rgba(0, 0, 0, 0.2);
   
   // Transitions
   --transition-fast: 150ms ease;
@@ -66,7 +66,7 @@ body {
 
 body {
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-size: 12px; /* Base font size - alle em-Werte basieren darauf */
   line-height: 1.5;
   color: var(--color-primary);
   background: var(--color-secondary);
@@ -105,17 +105,21 @@ button {
 
 // Responsive Utilities
 @media (max-width: $tablet) {
+  body {
+    font-size: 13px; /* Größere Base für Tablet */
+  }
   :root {
-    --font-size-base: 13px;
-    --spacing-md: 12px;
-    --spacing-lg: 20px;
+    --spacing-md: 1em;
+    --spacing-lg: 1.538em; /* 20px */
   }
 }
 
 @media (max-width: $mobile) {
+  body {
+    font-size: 12px; /* Zurück zu Base für Mobile */
+  }
   :root {
-    --font-size-base: 12px;
-    --spacing-md: 10px;
-    --spacing-lg: 16px;
+    --spacing-md: 0.833em; /* 10px */
+    --spacing-lg: 1.333em; /* 16px */
   }
 }

@@ -21,6 +21,7 @@ export class GameBoardComponent implements AfterViewChecked {
   protected selectedCard = signal<Card | null>(null);
   protected showSuitSelector = signal<boolean>(false);
   protected showWinOverlay = signal<boolean>(true);
+  protected showExitConfirmation = signal<boolean>(false);
   protected hoverAvatarUrl = signal<string | null>(null);
   protected hoverAvatarPosition = signal<{ x: number, y: number } | null>(null);
   private hoverTimeout: any = null;
@@ -129,7 +130,12 @@ export class GameBoardComponent implements AfterViewChecked {
     this.showWinOverlay.set(true);
   }
 
+  confirmBackToStart(): void {
+    this.showExitConfirmation.set(true);
+  }
+
   backToStart(): void {
+    this.showExitConfirmation.set(false);
     this.returnToStart.emit();
   }
 
