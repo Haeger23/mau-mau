@@ -23,11 +23,12 @@
   }
 
   @if (gameState()) {
-    <!-- Game Area -->
-    <div class="game-area">
-      
-      <!-- Main Game Area -->
-      <div class="game-main">
+    <!-- Game Area Container with fixed height -->
+    <div class="game-container">
+      <div class="game-area">
+        
+        <!-- Main Game Area -->
+        <div class="game-main">
       
       <!-- Opponent Players -->
       <div class="opponents">
@@ -305,7 +306,8 @@
         </div>
       </div>
       
-    </div>
+      </div><!-- end game-area -->
+    </div><!-- end game-container -->
 
     <!-- Avatar Zoom Overlay -->
     @if (hoverAvatarUrl() && hoverAvatarPosition()) {

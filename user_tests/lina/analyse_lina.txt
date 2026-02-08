@@ -1,0 +1,43 @@
+# User Test Analyse - Lina
+## Datum: 6. Februar 2026
+## Testperson: Carolina (Lina)
+
+---
+
+## 1. BUGS / FEHLER
+
+### Bug 1: Erste Karte zählt nicht als gültige Aktion (kritisch)
+**Zeitstempel:** 4:52 - 5:08
+**Beschreibung:** Wenn eine 8 als erste Karte liegt, muss der erste Spieler aussetzen - das System erkennt dies nicht korrekt.
+**Zitat:** "Strafkarte. Versuche zuzuwenden. Noch keine Aktion durchgeführt. Das war noch ein Bug. Die erste Karte zählt ja noch nicht als gültig."
+**Erwartetes Verhalten:** Die aufgedeckte Startkarte sollte als gültige Spielaktion zählen (z.B. 8 = Aussetzen).
+
+
+---
+
+## 2. UX-VERBESSERUNGSVORSCHLÄGE
+
+### Verbesserung 1: Kartenbezeichnung im Chatlog umdrehen
+**Zeitstempel:** 3:46 - 4:12
+**Beschreibung:** Die Reihenfolge der Kartenbezeichnung ist unüblich.
+**Zitat:** "Aber hier würde ich das mir nochmal angucken, weil man sagt Herz König und nicht König Herz. [...] Karo 10 würde man sagen. Er hat eine Karo 10 gespielt. Und nicht 10 Karo."
+**Empfehlung:** Ändern von "König Herz" zu "Herz König", "10 Karo" zu "Karo 10" etc.
+
+### Verbesserung 2: Anzeige wer dran ist
+**Zeitstempel:** 4:34 - 4:47
+**Beschreibung:** Es fehlt eine klare Anzeige, welcher Spieler am Zug ist.
+**Zitat:** "Also hier am Anfang fehlt mir irgendwie noch, dass ich weiß, wer dran ist. [...] Also hier könnte irgendwie noch stehen, du bist dran oder sowas."
+**Empfehlung:** Deutliche visuelle Anzeige "Du bist dran" oder Hervorhebung des aktiven Spielers.
+
+### Verbesserung 3: Spielgeschwindigkeit einstellbar machen
+**Zeitstempel:** 6:01 - 6:38
+**Beschreibung:** Die KI-Züge sind zu schnell, um mitzulesen.
+**Zitat:** "Das ging mir jetzt ein bisschen zu schnell. Vielleicht könnte man als zukünftig irgendwie die Spielgeschwindigkeit einstellen, weil man will ja mitkriegen, was die anderen machen."
+**Weiteres Zitat:** "Aber so schnell kann ich gar nicht lesen. Es wäre ja schöner, ich könnte es hier mitlesen."
+**Empfehlung:** Option für Spielgeschwindigkeit (langsam/normal/schnell) auf der Startseite oder in den Einstellungen.
+
+### Verbesserung 4: Strafkartenanzeige bei +2/+4
+**Zeitstempel:** 7:58 - 8:05
+**Beschreibung:** Bei Siebener-Ketten sollte die Anzahl der zu ziehenden Karten prominent angezeigt werden.
+**Zitat:** "Nächster Spieler muss zwei Karten ziehen. Das steht jetzt hier wegen der sieben. [...] Das wäre natürlich auch cool, wenn es hier oben irgendwie steht."
+**Empfehlung:** "+2" oder "+4" Anzeige prominent im Spielbereich (nicht nur im Chat-Log).
