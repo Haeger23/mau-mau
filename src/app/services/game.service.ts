@@ -75,6 +75,7 @@ export class GameService implements AIGameActions {
       queenRoundActive: false,
       queenRoundStarterId: null,
       queenRoundNeedsFirstQueen: false,
+      queenRoundEndedThisTurn: false,
       nineBaseActive: false,
       nineBaseSuit: null,
       nineBasePlayerId: null,
@@ -149,33 +150,67 @@ export class GameService implements AIGameActions {
       }
     });
 
-    // Place first card on discard pile
-    const firstCard = deck.pop();
+    // Place first card on discard pile (reshuffle if Jack)
+    let firstCard = deck.pop();
+    while (firstCard && firstCard.rank === 'J') {
+      // Bube als Startkarte nicht erlaubt — zurücklegen und neu mischen
+      deck.push(firstCard);
+      this.shuffleDeck(deck);
+      firstCard = deck.pop();
+    }
     const discardPile = firstCard ? [firstCard] : [];
+
+    // Startkarten-Effekte ermitteln
+    let startDrawPenalty = 0;
+    let startSkipNext = false;
+    let startActiveAce = false;
+    if (firstCard) {
+      switch (firstCard.rank) {
+        case '7':
+          startDrawPenalty = 2;
+          break;
+        case '8':
+          startSkipNext = true;
+          break;
+        case 'A':
+          startActiveAce = true;
+          break;
+        // Q, 9, 10, K: kein Starteffekt
+      }
+    }
 
     this.gameState.set({
       players,
       currentPlayerIndex: 0,
       deck,
       discardPile,
-      drawPenalty: 0,
-      skipNext: false,
-      activeAce: false,
+      drawPenalty: startDrawPenalty,
+      skipNext: startSkipNext,
+      activeAce: startActiveAce,
       chosenSuit: null,
       gameOver: false,
       winner: null,
       lastPlayedCard: firstCard || null,
-      chatLog: [{
-        timestamp: new Date(),
-        playerName: 'System',
-        message: 'Spiel gestartet!',
-        type: 'play'
-      }],
+      chatLog: [
+        {
+          timestamp: new Date(),
+          playerName: 'System',
+          message: 'Spiel gestartet!',
+          type: 'play'
+        },
+        ...(firstCard ? [{
+          timestamp: new Date(),
+          playerName: 'System',
+          message: `Startkarte: ${this.getCardDisplayName(firstCard)}`,
+          type: 'play' as const
+        }] : [])
+      ],
       turnPhase: 'WAITING_FOR_ACTION',
       lastPlayerAction: null,
       queenRoundActive: false,
       queenRoundStarterId: null,
       queenRoundNeedsFirstQueen: false,
+      queenRoundEndedThisTurn: false,
       nineBaseActive: false,
       nineBaseSuit: null,
       nineBasePlayerId: null,
@@ -551,37 +586,8 @@ export class GameService implements AIGameActions {
       }
 
       // Mau-Ansage nicht sofort prüfen – erst beim Zugende
-      
-      // DAMENRUNDE: Prüfe ob Starter vergessen hat zu beenden
-      const finalState = this.gameState();
-      const finalPlayer = finalState.players[finalState.currentPlayerIndex];
-      if (finalState.queenRoundActive && finalPlayer.isQueenRoundStarter && topCard.rank !== 'Q' && topCard.rank !== '10') {
-        this.assignPenaltyCards(
-          finalPlayer.id,
-          1,
-          'Damenrunde nicht beendet (keine Dame mehr gespielt)',
-          'QUEEN_FORGOT_TO_END'
-        );
-        
-        finalState.queenRoundActive = false;
-        finalState.queenRoundStarterId = null;
-        finalState.queenRoundNeedsFirstQueen = false;
-        
-        finalState.players.forEach(p => {
-          p.inQueenRound = false;
-          p.isQueenRoundStarter = false;
-        });
-        
-        this.addChatLog(
-          finalPlayer.name,
-          'hat Damenrunde nicht beendet - automatisch beendet',
-          'queen-round-end',
-          'QUEEN_ROUND_AUTO_ENDED'
-        );
-        
-        this.gameState.set({ ...finalState });
-      }
-      
+      // Damenrunde-Prüfung erfolgt jetzt in endTurn() statt hier
+
       // Zug beenden (für alle Spieler)
       this.nextTurn();
       return;
@@ -637,11 +643,13 @@ export class GameService implements AIGameActions {
     state.lastPlayerAction = 'play';
     state.turnPhase = 'CARD_PLAYED';
     
+    // Merke activeAce VOR applyCardEffect, um 10-repliziertes-Ass zu erkennen
+    const wasActiveAceBefore = state.activeAce;
     // Wenn eine Karte nach einem Ass gespielt wird, reset activeAce
     if (state.activeAce) {
       state.activeAce = false;
     }
-    
+
     // Log nur wenn nicht 7er-Escape (wird in applyCardEffect geloggt)
     if (!isEscapingWith7) {
       // Bei 8er: Kombiniere mit Skip-Info
@@ -661,9 +669,9 @@ export class GameService implements AIGameActions {
       // State früh committen, damit nach playCard() sofort sichtbar
       this.gameState.set({ ...state });
     }
-    
+
     const moveValid = this.applyCardEffect(card);
-    
+
     // If move was invalid (e.g., 10 replicated Jack), player stays active
     if (!moveValid) {
       // Für KI: Triggere erneut den KI-Zug nach kurzer Verzögerung
@@ -672,6 +680,16 @@ export class GameService implements AIGameActions {
         setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
       }
       // Spieler bleibt am Zug - KEIN nextTurn()
+      return;
+    }
+
+    // 10 hat Ass repliziert → Spieler bleibt am Zug (wie bei direkt gespieltem Ass)
+    if (state.activeAce && !wasActiveAceBefore) {
+      this.gameState.set({ ...state });
+      if (!currentPlayer.isHuman) {
+        this.aiService.resetGuard();
+        setTimeout(() => this.aiService.playTurn(this.gameState()), AI_TIMING.TURN_DELAY);
+      }
       return;
     }
 
@@ -694,36 +712,7 @@ export class GameService implements AIGameActions {
     }
 
     // Mau-Ansage nicht sofort prüfen – erst beim Zugende
-
-    // DAMENRUNDE: Prüfe ob Starter vergessen hat zu beenden
-    // Wenn Starter eine Nicht-Dame spielt während Damenrunde aktiv -> Auto-Ende + Strafe
-    // (10 zählt hier NICHT als Dame - Damenrunde muss mit echter Dame enden!)
-    if (state.queenRoundActive && currentPlayer.isQueenRoundStarter && card.rank !== 'Q') {
-      // Starter hat keine Dame mehr gespielt -> Damenrunde automatisch beenden + Strafe
-      this.assignPenaltyCards(
-        currentPlayer.id,
-        1,
-        'Damenrunde nicht mit Dame beendet',
-        'QUEEN_FORGOT_TO_END'
-      );
-      
-      // Damenrunde beenden
-      state.queenRoundActive = false;
-      state.queenRoundStarterId = null;
-      state.queenRoundNeedsFirstQueen = false;
-      
-      state.players.forEach(p => {
-        p.inQueenRound = false;
-        p.isQueenRoundStarter = false;
-      });
-      
-      this.addChatLog(
-        currentPlayer.name,
-        'hat Damenrunde nicht beendet - automatisch beendet',
-        'queen-round-end',
-        'QUEEN_ROUND_AUTO_ENDED'
-      );
-    }
+    // Damenrunde-Prüfung erfolgt jetzt in endTurn() statt hier
 
     // If Jack was played, don't proceed to next turn
     if (!hasJack) {
@@ -856,6 +845,11 @@ export class GameService implements AIGameActions {
               }
               break;
             
+            case 'A':
+              state.activeAce = true;
+              this.addChatLog(currentPlayer.name, `repliziert ${this.getCardDisplayName(cardBelow)} - ist erneut am Zug`, 'play');
+              break;
+
             // Andere Karten haben keinen kopierbaren Effekt
             default:
               this.addChatLog(currentPlayer.name, `repliziert ${this.getCardDisplayName(cardBelow)} (kein Effekt)`, 'play');
@@ -912,6 +906,12 @@ export class GameService implements AIGameActions {
   drawCard(): void {
     const state = this.gameState();
     const currentPlayer = state.players[state.currentPlayerIndex];
+
+    // Nur 1 Karte ziehen erlaubt (ohne 7er-Strafe) - jede weitere = Strafkarte
+    if (state.turnPhase === 'DRAW_COMPLETE' && currentPlayer.requiredDrawCount === 0 && state.drawPenalty === 0) {
+      this.assignPenaltyCards(currentPlayer.id, 1, 'Nur 1 Karte ziehen erlaubt', 'DRAW_TOO_MANY');
+      return;
+    }
 
     // DAMENRUNDE ESCAPE: Wenn Damenrunde aktiv und Spieler keine Dame/10 hat,
     // darf er ziehen um dem "stuck" Zustand zu entkommen
@@ -1067,6 +1067,37 @@ export class GameService implements AIGameActions {
       this.gameState.set({ ...state });
     }
 
+    // DAMENRUNDE: Prüfe ob Starter vergessen hat zu beenden
+    // Nur wenn Damenrunde noch aktiv UND in diesem Zug nicht beendet wurde
+    const endTurnState = this.gameState();
+    const endTurnPlayer = endTurnState.players[endTurnState.currentPlayerIndex];
+    if (endTurnState.queenRoundActive && endTurnPlayer.isQueenRoundStarter && !endTurnState.queenRoundEndedThisTurn) {
+      this.assignPenaltyCards(
+        endTurnPlayer.id,
+        1,
+        'Damenrunde nicht beendet',
+        'QUEEN_FORGOT_TO_END'
+      );
+
+      endTurnState.queenRoundActive = false;
+      endTurnState.queenRoundStarterId = null;
+      endTurnState.queenRoundNeedsFirstQueen = false;
+
+      endTurnState.players.forEach(p => {
+        p.inQueenRound = false;
+        p.isQueenRoundStarter = false;
+      });
+
+      this.addChatLog(
+        endTurnPlayer.name,
+        'hat Damenrunde nicht beendet - automatisch beendet',
+        'queen-round-end',
+        'QUEEN_ROUND_AUTO_ENDED'
+      );
+
+      this.gameState.set({ ...endTurnState });
+    }
+
     // Nächster Spieler
     this.nextTurn();
   }
@@ -1097,6 +1128,7 @@ export class GameService implements AIGameActions {
     state.turnPhase = 'WAITING_FOR_ACTION';
     state.lastPlayerAction = null;
     state.activeAce = false; // Reset Ass-Flag für nächsten Spieler
+    state.queenRoundEndedThisTurn = false; // Reset Damenrunde-Flag für nächsten Zug
 
     // Handle skip: skip next player and move to player after
     // In 2-player game: skip advances by 1 (to the other player, who then gets skipped)
@@ -1424,7 +1456,8 @@ export class GameService implements AIGameActions {
       state.queenRoundActive = false;
       state.queenRoundStarterId = null;
       state.queenRoundNeedsFirstQueen = false;
-      
+      state.queenRoundEndedThisTurn = true;
+
       // Alle Spieler aus der Damenrunde entfernen
       state.players.forEach(p => {
         p.inQueenRound = false;
@@ -1432,9 +1465,9 @@ export class GameService implements AIGameActions {
       });
 
       this.addChatLog(
-        currentPlayer.name, 
-        'beendet die Damenrunde', 
-        'queen-round-end', 
+        currentPlayer.name,
+        'beendet die Damenrunde',
+        'queen-round-end',
         'QUEEN_ROUND_ENDED'
       );
       this.gameState.set({ ...state });

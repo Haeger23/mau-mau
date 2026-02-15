@@ -742,17 +742,224 @@ describe('GameService', () => {
       const state = getState();
       const player = state.players[0];
       const initialPenaltyCount = player.penaltyCards.length;
-      
+
       // Player hasn't played or drawn
       state.lastPlayerAction = null;
       player.drawnThisTurn = 0;
-      
+
       service.endTurnTooEarly();
-      
+
       const newState = getState();
       const newPlayer = newState.players[0];
-      
+
       expect(newPlayer.penaltyCards.length).toBeGreaterThan(initialPenaltyCount);
+    });
+  });
+
+  // ========== Phase 1A: Unlimited draw penalty ==========
+  describe('drawCard() - draw limit enforcement', () => {
+    beforeEach(() => {
+      service.startNewGame(['Player1', 'Player2']);
+    });
+
+    it('should allow exactly 1 draw in normal turn', () => {
+      service.drawCard();
+      const state = getState();
+      expect(state.players[0].drawnThisTurn).toBe(1);
+      expect(state.turnPhase).toBe('DRAW_COMPLETE');
+    });
+
+    it('should assign penalty for second draw in normal turn', () => {
+      service.drawCard();
+      // Attempt second draw
+      service.drawCard();
+      const state = getState();
+      // Should have gotten a penalty card, not a second drawn card
+      expect(state.players[0].lockedPenaltyCards.length).toBe(1);
+      // drawnThisTurn should still be 1 (second draw was blocked)
+      expect(state.players[0].drawnThisTurn).toBe(1);
+    });
+
+    it('should allow multiple draws when 7er penalty is active', () => {
+      const state = getState();
+      state.drawPenalty = 4;
+
+      service.drawCard();
+      service.drawCard();
+      service.drawCard();
+      service.drawCard();
+
+      const newState = getState();
+      expect(newState.players[0].drawnThisTurn).toBe(4);
+      expect(newState.players[0].lockedPenaltyCards.length).toBe(0);
+    });
+  });
+
+  // ========== Phase 1B: First card effects ==========
+  describe('startNewGame() - first card effects', () => {
+    it('should set drawPenalty=2 when start card is 7', () => {
+      // Try multiple seeds to find one where first card is 7
+      for (let seed = 0; seed < 1000; seed++) {
+        service.setSeed(seed);
+        service.startNewGame(['Player1', 'Player2']);
+        const state = getState();
+        const firstCard = state.discardPile[0];
+        if (firstCard.rank === '7') {
+          expect(state.drawPenalty).toBe(2);
+          return;
+        }
+      }
+      // If no seed produced a 7 as first card, skip
+      console.warn('No seed produced 7 as first card in 1000 tries');
+    });
+
+    it('should set skipNext=true when start card is 8', () => {
+      for (let seed = 0; seed < 1000; seed++) {
+        service.setSeed(seed);
+        service.startNewGame(['Player1', 'Player2']);
+        const state = getState();
+        const firstCard = state.discardPile[0];
+        if (firstCard.rank === '8') {
+          expect(state.skipNext).toBe(true);
+          return;
+        }
+      }
+      console.warn('No seed produced 8 as first card in 1000 tries');
+    });
+
+    it('should never have Jack as start card', () => {
+      for (let seed = 0; seed < 200; seed++) {
+        service.setSeed(seed);
+        service.startNewGame(['Player1', 'Player2']);
+        const state = getState();
+        const firstCard = state.discardPile[0];
+        expect(firstCard.rank).not.toBe('J');
+      }
+    });
+  });
+
+  // ========== Phase 1C: Ace replication via 10 ==========
+  describe('applyCardEffect() - 10 replicates Ace', () => {
+    beforeEach(() => {
+      service.startNewGame(['Player1', 'Player2']);
+    });
+
+    it('should set activeAce when 10 replicates Ace', () => {
+      const state = getState();
+      const player = state.players[0];
+
+      // Set up: place an Ace on discard pile
+      const ace = createCard('hearts', 'A');
+      state.discardPile.push(ace);
+      state.lastPlayedCard = ace;
+
+      // Give player a 10 of any suit
+      const ten = createCard('hearts', '10');
+      player.hand = [ten, createCard('clubs', 'K')]; // Need 2+ cards (can't win with just 10)
+
+      service.playCard(ten);
+
+      const newState = getState();
+      expect(newState.activeAce).toBe(true);
+    });
+
+    it('should keep player on turn when 10 replicates Ace', () => {
+      const state = getState();
+      const player = state.players[0];
+
+      const ace = createCard('hearts', 'A');
+      state.discardPile.push(ace);
+      state.lastPlayedCard = ace;
+
+      const ten = createCard('hearts', '10');
+      player.hand = [ten, createCard('clubs', 'K')];
+
+      service.playCard(ten);
+
+      const newState = getState();
+      // Player should still be active (didn't move to next turn)
+      expect(newState.currentPlayerIndex).toBe(0);
+      expect(newState.players[0].isActive).toBe(true);
+    });
+  });
+
+  // ========== Phase 2A: Queen round penalty timing ==========
+  describe('Queen round - penalty timing', () => {
+    beforeEach(() => {
+      service.startNewGame(['Player1', 'Player2']);
+    });
+
+    it('should allow endQueenRound after playing card in same turn', () => {
+      const state = getState();
+      const player = state.players[0];
+
+      // Set up queen round with player as starter
+      state.queenRoundActive = true;
+      state.queenRoundStarterId = player.id;
+      player.isQueenRoundStarter = true;
+      player.inQueenRound = true;
+
+      // Give player a Queen that matches the discard pile
+      const queen = createCard(state.discardPile[0].suit, 'Q');
+      player.hand = [queen, createCard('hearts', 'K'), createCard('clubs', '9')];
+
+      // Play the Queen first
+      service.playCard(queen);
+
+      // Now end the queen round (after playing)
+      service.endQueenRound();
+
+      // Then end the turn
+      service.endTurn();
+
+      const newState = getState();
+      // Should have NO penalty for queen round (it was correctly ended)
+      expect(newState.players[0].lockedPenaltyCards.length).toBe(0);
+    });
+
+    it('should penalize at endTurn if queen round not ended by starter', () => {
+      const state = getState();
+      const player = state.players[0];
+
+      // Set up queen round with player as starter
+      state.queenRoundActive = true;
+      state.queenRoundStarterId = player.id;
+      player.isQueenRoundStarter = true;
+      player.inQueenRound = true;
+
+      // Give player a non-Queen card matching discard pile
+      const card = createCard(state.discardPile[0].suit, 'K');
+      player.hand = [card, createCard('hearts', '9')];
+      state.turnPhase = 'CARD_PLAYED';
+      state.lastPlayerAction = 'play';
+
+      // End turn without ending queen round
+      service.endTurn();
+
+      const newState = getState();
+      // Should have penalty for not ending queen round
+      const penaltyLogs = newState.chatLog.filter(m => m.message.includes('Damenrunde nicht beendet'));
+      expect(penaltyLogs.length).toBeGreaterThan(0);
+    });
+
+    it('should not penalize non-starter for queen round', () => {
+      const state = getState();
+      const player = state.players[0];
+
+      // Set up queen round but player is NOT the starter
+      state.queenRoundActive = true;
+      state.queenRoundStarterId = 'player-1'; // Other player is starter
+      player.isQueenRoundStarter = false;
+      player.inQueenRound = true;
+
+      state.turnPhase = 'CARD_PLAYED';
+      state.lastPlayerAction = 'play';
+
+      service.endTurn();
+
+      const newState = getState();
+      const penaltyLogs = newState.chatLog.filter(m => m.message.includes('Damenrunde nicht beendet'));
+      expect(penaltyLogs.length).toBe(0);
     });
   });
 });

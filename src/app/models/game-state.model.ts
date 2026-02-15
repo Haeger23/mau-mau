@@ -44,6 +44,7 @@ export interface GameState {
   queenRoundActive: boolean;
   queenRoundStarterId: string | null;
   queenRoundNeedsFirstQueen: boolean; // Nach Ankündigung: erste Karte MUSS Dame sein
+  queenRoundEndedThisTurn: boolean; // Ob endQueenRound() in diesem Zug aufgerufen wurde
   // 9er-Basis: sequentielles Ablegen gleicher Farbe in einem Zug
   nineBaseActive: boolean;
   nineBaseSuit: Suit | null;
