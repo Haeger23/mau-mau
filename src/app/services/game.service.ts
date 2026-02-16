@@ -126,12 +126,15 @@ export class GameService implements AIGameActions {
       index === 0 ? name : randomNames[index - 1] || name
     );
 
+    // Zufälligen Startspieler wählen
+    const startingPlayerIndex = Math.floor(this.rng.next() * finalNames.length);
+
     const players: Player[] = finalNames.map((name, index) => ({
       id: `player-${index}`,
       name,
       hand: [],
       isHuman: index === 0,
-      isActive: index === 0,
+      isActive: index === startingPlayerIndex,
       penaltyCards: [], // deprecated - kept for backward compat
       lockedPenaltyCards: [],
       pickupablePenaltyCards: [],
@@ -180,9 +183,10 @@ export class GameService implements AIGameActions {
       }
     }
 
+    const startingPlayer = players[startingPlayerIndex];
     this.gameState.set({
       players,
-      currentPlayerIndex: 0,
+      currentPlayerIndex: startingPlayerIndex,
       deck,
       discardPile,
       drawPenalty: startDrawPenalty,
@@ -204,7 +208,13 @@ export class GameService implements AIGameActions {
           playerName: 'System',
           message: `Startkarte: ${this.getCardDisplayName(firstCard)}`,
           type: 'play' as const
-        }] : [])
+        }] : []),
+        {
+          timestamp: new Date(),
+          playerName: 'System',
+          message: `${startingPlayer.name} beginnt`,
+          type: 'play' as const
+        }
       ],
       turnPhase: 'WAITING_FOR_ACTION',
       lastPlayerAction: null,
@@ -218,6 +228,11 @@ export class GameService implements AIGameActions {
       nineBasePlayerId: null,
       awaitingSuitChoice: false
     });
+
+    // Wenn KI als erstes dran ist, automatisch starten
+    if (!startingPlayer.isHuman) {
+      setTimeout(() => this.triggerAIPlay(), AI_TIMING.TURN_DELAY);
+    }
   }
 
   private createDeck(): Card[] {

@@ -30,6 +30,14 @@ describe('GameService', () => {
   // Helper to access state (public readonly signal)
   const getState = () => service.state();
 
+  // Helper to force player[0] as current player (needed since starting player is now random)
+  const forcePlayer0Turn = () => {
+    const s = service['gameState']();
+    s.currentPlayerIndex = 0;
+    s.players.forEach((p: { isActive: boolean }, i: number) => { p.isActive = i === 0; });
+    service['gameState'].set({ ...s });
+  };
+
   // ========== Basic Game Flow Tests ==========
   
   describe('startNewGame()', () => {
@@ -69,14 +77,52 @@ describe('GameService', () => {
     it('should initialize lastPlayerAction as null', () => {
       service.startNewGame(['Player1', 'Player2']);
       const state = getState();
-      
+
       expect(state.lastPlayerAction).toBeNull();
+    });
+
+    // ========== Phase 4A: Random starting player ==========
+
+    it('should set exactly one active player', () => {
+      service.startNewGame(['Player1', 'Player2', 'Player3']);
+      const state = getState();
+      const activePlayers = state.players.filter(p => p.isActive);
+      expect(activePlayers.length).toBe(1);
+    });
+
+    it('should set currentPlayerIndex to match the active player', () => {
+      service.startNewGame(['Player1', 'Player2', 'Player3']);
+      const state = getState();
+      expect(state.players[state.currentPlayerIndex].isActive).toBe(true);
+    });
+
+    it('should add a "beginnt" chat message indicating starting player', () => {
+      service.startNewGame(['Player1', 'Player2', 'Player3']);
+      const state = getState();
+      const starterLog = state.chatLog.filter(m => m.message.includes('beginnt'));
+      expect(starterLog.length).toBe(1);
+      // The named player must match the active player
+      const startingPlayer = state.players[state.currentPlayerIndex];
+      expect(starterLog[0].message).toContain(startingPlayer.name);
+    });
+
+    it('should randomize starting player across multiple seeds', () => {
+      // With different seeds, different players should start
+      const startingIndices = new Set<number>();
+      for (let seed = 0; seed < 20; seed++) {
+        service.setSeed(seed);
+        service.startNewGame(['P1', 'P2', 'P3']);
+        startingIndices.add(getState().currentPlayerIndex);
+      }
+      // With 20 different seeds and 3 players, we expect at least 2 distinct starters
+      expect(startingIndices.size).toBeGreaterThan(1);
     });
   });
 
   describe('drawCard()', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should add one card to player hand', () => {
@@ -105,6 +151,7 @@ describe('GameService', () => {
   describe('playCard()', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should remove card from player hand when valid', () => {
@@ -163,6 +210,7 @@ describe('GameService', () => {
   describe('canPlayCard() - Card Validation', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should allow Jack on any card except Jack', () => {
@@ -198,6 +246,7 @@ describe('GameService', () => {
   describe('Mau and Mau-Mau Announcements', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('sayMau() should be callable', () => {
@@ -218,6 +267,7 @@ describe('GameService', () => {
   describe('Queen Round', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('announceQueenRound() should be callable', () => {
@@ -253,6 +303,7 @@ describe('GameService', () => {
   describe('Suit Choice (Jack)', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('chooseSuit() should be callable with valid suits', () => {
@@ -274,6 +325,7 @@ describe('GameService', () => {
   describe('Turn Management', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('endTurn() should be callable', () => {
@@ -308,6 +360,7 @@ describe('GameService', () => {
   describe('Penalty System', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('pickupPenaltyCards() should be callable', () => {
@@ -397,6 +450,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: Jack on Jack (§7 BUBE)', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should not allow Jack to be played on Jack', () => {
@@ -438,6 +492,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: Ace Last Card', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should not allow game to end with Ace as last card', () => {
@@ -485,6 +540,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: 7-Chain (Strafkarten)', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should set drawPenalty when 7 is played', () => {
@@ -548,6 +604,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: 8 Skip', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should set skipNext when 8 is played', () => {
@@ -571,6 +628,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: Queen Round (§9.A DAMENRUNDE)', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should give penalty for announcing with less than 2 Queens', () => {
@@ -636,6 +694,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: Jack Suit Choice', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should set awaitingSuitChoice when Jack is played', () => {
@@ -673,6 +732,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: Invalid Card Play', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should give penalty when playing invalid card via playInvalidCard()', () => {
@@ -693,6 +753,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: Mau Announcement', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should give penalty for false Mau (not exactly 1 card)', () => {
@@ -736,6 +797,7 @@ describe('GameService', () => {
   describe('Rule Enforcement: End Turn Too Early', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should give penalty for ending turn without action', () => {
@@ -760,6 +822,7 @@ describe('GameService', () => {
   describe('drawCard() - draw limit enforcement', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should allow exactly 1 draw in normal turn', () => {
@@ -842,6 +905,7 @@ describe('GameService', () => {
   describe('applyCardEffect() - 10 replicates Ace', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should set activeAce when 10 replicates Ace', () => {
@@ -887,6 +951,7 @@ describe('GameService', () => {
   describe('Queen round - penalty timing', () => {
     beforeEach(() => {
       service.startNewGame(['Player1', 'Player2']);
+      forcePlayer0Turn();
     });
 
     it('should allow endQueenRound after playing card in same turn', () => {
@@ -968,6 +1033,7 @@ describe('GameService', () => {
   describe('Win condition - deferred to endTurn()', () => {
     beforeEach(() => {
       service.startNewGame(['Human', 'AI1', 'AI2']);
+      forcePlayer0Turn();
     });
 
     it('should NOT end game immediately when human plays last non-Jack card', () => {
@@ -1063,6 +1129,7 @@ describe('GameService', () => {
   describe('Queen round - endQueenRound() after playing a Queen', () => {
     beforeEach(() => {
       service.startNewGame(['Human', 'AI1']);
+      forcePlayer0Turn();
     });
 
     it('should successfully end queen round when last card is Queen', () => {
