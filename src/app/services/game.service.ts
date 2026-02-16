@@ -566,30 +566,18 @@ export class GameService implements AIGameActions {
       const stateAfterEffect = this.gameState();
       const currentPlayerAfter = stateAfterEffect.players[stateAfterEffect.currentPlayerIndex];
       
-      // Check for win condition
-      if (currentPlayerAfter.hand.length === 0) {
-        const wasJack = topCard.rank === 'J';
-        
-        if (wasJack) {
-          // Letzte Karte war Bube: auf "Mau-Mau" warten, Spiel noch nicht beenden
-          this.addChatLog(currentPlayerAfter.name, 'letzte Karte war Bube – warte auf "Mau-Mau"', 'mau-mau');
-          this.gameState.set({ ...stateAfterEffect });
-          return;
-        }
-
-        const updatedState = this.gameState();
-        updatedState.gameOver = true;
-        updatedState.winner = currentPlayerAfter;
-        this.addChatLog(currentPlayerAfter.name, `hat gewonnen! 🎉`, 'win');
-        this.gameState.set({ ...updatedState });
+      // Jack als letzte Karte: auf "Mau-Mau" warten, Spiel noch nicht beenden
+      if (currentPlayerAfter.hand.length === 0 && topCard.rank === 'J') {
+        this.addChatLog(currentPlayerAfter.name, 'letzte Karte war Bube – warte auf "Mau-Mau"', 'mau-mau');
+        this.gameState.set({ ...stateAfterEffect });
         return;
       }
 
       // Mau-Ansage nicht sofort prüfen – erst beim Zugende
-      // Damenrunde-Prüfung erfolgt jetzt in endTurn() statt hier
+      // Gewinnbedingung wird in endTurn() geprüft
 
       // Zug beenden (für alle Spieler)
-      this.nextTurn();
+      this.endTurn();
       return;
     }
     
@@ -693,34 +681,23 @@ export class GameService implements AIGameActions {
       return;
     }
 
-    // Check for win condition
-    if (currentPlayer.hand.length === 0) {
-      const wasJack = card.rank === 'J';
-      
-      if (wasJack) {
-        // Letzte Karte war Bube: auf "Mau-Mau" warten, Spiel noch nicht beenden
-        this.addChatLog(currentPlayer.name, 'letzte Karte war Bube – warte auf "Mau-Mau"', 'mau-mau');
-        this.gameState.set({ ...state });
-        return;
-      }
-
-      state.gameOver = true;
-      state.winner = currentPlayer;
-      this.addChatLog(currentPlayer.name, `hat gewonnen! 🎉`, 'win');
+    // Jack als letzte Karte: auf "Mau-Mau" warten, Spiel noch nicht beenden
+    if (currentPlayer.hand.length === 0 && card.rank === 'J') {
+      this.addChatLog(currentPlayer.name, 'letzte Karte war Bube – warte auf "Mau-Mau"', 'mau-mau');
       this.gameState.set({ ...state });
       return;
     }
 
     // Mau-Ansage nicht sofort prüfen – erst beim Zugende
-    // Damenrunde-Prüfung erfolgt jetzt in endTurn() statt hier
+    // Gewinnbedingung wird in endTurn() geprüft
 
     // If Jack was played, don't proceed to next turn
     if (!hasJack) {
       // Für Menschen: Warte auf manuelles "Zug beenden"
-      // Für KI: Automatisch weiter
+      // Für KI: Automatisch endTurn() aufrufen (inkl. Penalty-/Gewinnprüfung)
       if (!currentPlayer.isHuman) {
-        console.log(`[playCard] AI ${currentPlayer.name} finished playing ${card.rank}, calling nextTurn()`);
-        this.nextTurn();
+        console.log(`[playCard] AI ${currentPlayer.name} finished playing ${card.rank}, calling endTurn()`);
+        this.endTurn();
       }
       // Menschlicher Spieler muss "Zug beenden" klicken
     } else {
@@ -897,9 +874,9 @@ export class GameService implements AIGameActions {
     console.log(`[chooseSuit] After set, chosenSuit is: ${this.gameState().chosenSuit}`);
     
     // Für Menschen: Warte auf manuelles "Zug beenden"
-    // Für KI: Automatisch weiter
+    // Für KI: Automatisch endTurn() (inkl. Penalty-/Gewinnprüfung)
     if (!currentPlayer.isHuman) {
-      this.nextTurn();
+      this.endTurn();
     }
   }
 
@@ -1096,6 +1073,19 @@ export class GameService implements AIGameActions {
       );
 
       this.gameState.set({ ...endTurnState });
+    }
+
+    // Gewinnbedingung: Hand leer UND keine Strafkarten übrig
+    const winCheckState = this.gameState();
+    const winCheckPlayer = winCheckState.players[winCheckState.currentPlayerIndex];
+    if (winCheckPlayer.hand.length === 0
+        && winCheckPlayer.lockedPenaltyCards.length === 0
+        && winCheckPlayer.pickupablePenaltyCards.length === 0) {
+      winCheckState.gameOver = true;
+      winCheckState.winner = winCheckPlayer;
+      this.addChatLog(winCheckPlayer.name, 'hat gewonnen! 🎉', 'win');
+      this.gameState.set({ ...winCheckState });
+      return; // Kein nextTurn — Spiel ist vorbei
     }
 
     // Nächster Spieler

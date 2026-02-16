@@ -962,4 +962,99 @@ describe('GameService', () => {
       expect(penaltyLogs.length).toBe(0);
     });
   });
+
+  // ========== Phase 2B: Win condition moved to endTurn ==========
+
+  describe('Win condition - deferred to endTurn()', () => {
+    beforeEach(() => {
+      service.startNewGame(['Human', 'AI1', 'AI2']);
+    });
+
+    it('should NOT end game immediately when human plays last non-Jack card', () => {
+      const state = getState();
+      const player = state.players[0];
+      player.isHuman = true;
+
+      // Give player exactly 1 card that matches the discard pile
+      const topDiscard = state.discardPile[state.discardPile.length - 1];
+      const lastCard = createCard(topDiscard.suit, 'K');
+      player.hand = [lastCard];
+
+      // Play the last card
+      service.playCard(lastCard);
+
+      const afterPlay = getState();
+      // Game should NOT be over yet — human must click "Zug beenden"
+      expect(afterPlay.gameOver).toBe(false);
+      expect(afterPlay.winner).toBeNull();
+    });
+
+    it('should end game after endTurn when hand is empty and no penalties', () => {
+      const state = getState();
+      const player = state.players[0];
+      player.isHuman = true;
+
+      // Give player exactly 1 card that matches the discard pile
+      const topDiscard = state.discardPile[state.discardPile.length - 1];
+      const lastCard = createCard(topDiscard.suit, 'K');
+      player.hand = [lastCard];
+      player.hasSaidMau = true; // Mau was announced
+
+      // Play the last card
+      service.playCard(lastCard);
+
+      // Now end the turn
+      service.endTurn();
+
+      const afterEnd = getState();
+      expect(afterEnd.gameOver).toBe(true);
+      expect(afterEnd.winner).not.toBeNull();
+      expect(afterEnd.winner!.id).toBe(player.id);
+    });
+
+    it('should not win if penalty cards exist after endTurn', () => {
+      const state = getState();
+      const player = state.players[0];
+      player.isHuman = true;
+
+      // Give player exactly 1 card that matches the discard pile
+      const topDiscard = state.discardPile[state.discardPile.length - 1];
+      const lastCard = createCard(topDiscard.suit, 'K');
+      player.hand = [lastCard];
+      player.hasSaidMau = true; // Mau was correctly announced
+
+      // Play the last card
+      service.playCard(lastCard);
+
+      // Manually assign a penalty before endTurn (simulating missed rule)
+      player.lockedPenaltyCards.push(createCard('hearts', '9'));
+
+      // End the turn
+      service.endTurn();
+
+      const afterEnd = getState();
+      // Player has penalty cards → should not win
+      expect(afterEnd.gameOver).toBe(false);
+    });
+
+    it('should still wait for Mau-Mau when last card is Jack', () => {
+      const state = getState();
+      const player = state.players[0];
+      player.isHuman = true;
+
+      // Give player exactly 1 Jack that can always be played
+      const lastJack = createCard('hearts', 'J');
+      player.hand = [lastJack];
+
+      // Play the Jack
+      service.playCard(lastJack);
+
+      const afterPlay = getState();
+      // Game should NOT be over — waiting for Mau-Mau announcement
+      expect(afterPlay.gameOver).toBe(false);
+      // Chat should indicate waiting for Mau-Mau
+      const mauMauLog = afterPlay.chatLog.filter(m => m.message.includes('warte auf "Mau-Mau"'));
+      expect(mauMauLog.length).toBeGreaterThan(0);
+    });
+  });
 });
