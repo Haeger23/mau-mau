@@ -57,8 +57,6 @@ Rules:
 ```bash
 git commit -m "$(cat <<'EOF'
 <commit message>
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 EOF
 )"
 ```
