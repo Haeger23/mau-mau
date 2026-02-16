@@ -75,6 +75,7 @@ export class GameService implements AIGameActions {
       queenRoundActive: false,
       queenRoundStarterId: null,
       queenRoundNeedsFirstQueen: false,
+      queenRoundStartedThisTurn: false,
       queenRoundEndedThisTurn: false,
       nineBaseActive: false,
       nineBaseSuit: null,
@@ -210,6 +211,7 @@ export class GameService implements AIGameActions {
       queenRoundActive: false,
       queenRoundStarterId: null,
       queenRoundNeedsFirstQueen: false,
+      queenRoundStartedThisTurn: false,
       queenRoundEndedThisTurn: false,
       nineBaseActive: false,
       nineBaseSuit: null,
@@ -1048,7 +1050,7 @@ export class GameService implements AIGameActions {
     // Nur wenn Damenrunde noch aktiv UND in diesem Zug nicht beendet wurde
     const endTurnState = this.gameState();
     const endTurnPlayer = endTurnState.players[endTurnState.currentPlayerIndex];
-    if (endTurnState.queenRoundActive && endTurnPlayer.isQueenRoundStarter && !endTurnState.queenRoundEndedThisTurn) {
+    if (endTurnState.queenRoundActive && endTurnPlayer.isQueenRoundStarter && !endTurnState.queenRoundEndedThisTurn && !endTurnState.queenRoundStartedThisTurn) {
       this.assignPenaltyCards(
         endTurnPlayer.id,
         1,
@@ -1118,6 +1120,7 @@ export class GameService implements AIGameActions {
     state.turnPhase = 'WAITING_FOR_ACTION';
     state.lastPlayerAction = null;
     state.activeAce = false; // Reset Ass-Flag für nächsten Spieler
+    state.queenRoundStartedThisTurn = false; // Reset für nächsten Zug
     state.queenRoundEndedThisTurn = false; // Reset Damenrunde-Flag für nächsten Zug
 
     // Handle skip: skip next player and move to player after
@@ -1387,6 +1390,7 @@ export class GameService implements AIGameActions {
     state.queenRoundActive = true;
     state.queenRoundStarterId = currentPlayer.id;
     state.queenRoundNeedsFirstQueen = true; // Nächste Karte MUSS Dame sein
+    state.queenRoundStartedThisTurn = true; // Startzug — kein Ende-Check in endTurn()
     currentPlayer.inQueenRound = true;
     currentPlayer.isQueenRoundStarter = true;
     

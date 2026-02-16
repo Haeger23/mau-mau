@@ -25,8 +25,8 @@ describe('StartScreenComponent', () => {
       expect(component.playerName()).toBe('');
     });
 
-    it('sollte mit 2 Gegnern als Standard starten', () => {
-      expect(component.opponentCount()).toBe(2);
+    it('sollte mit 3 Gegnern als Standard starten', () => {
+      expect(component.opponentCount()).toBe(3);
     });
 
     it('sollte Gegner-Optionen 1-4 haben', () => {

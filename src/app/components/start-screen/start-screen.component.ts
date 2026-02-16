@@ -453,7 +453,7 @@ export class StartScreenComponent {
   private gameService = inject(GameService);
   
   playerName = signal<string>('');
-  opponentCount = signal<number>(2);
+  opponentCount = signal<number>(3);
   opponentOptions = [1, 2, 3, 4];
   
   showSuggestions = signal<boolean>(false);

@@ -1057,4 +1057,82 @@ describe('GameService', () => {
       expect(mauMauLog.length).toBeGreaterThan(0);
     });
   });
+
+  // ========== Phase 3A: AI queen round end logic ==========
+
+  describe('Queen round - endQueenRound() after playing a Queen', () => {
+    beforeEach(() => {
+      service.startNewGame(['Human', 'AI1']);
+    });
+
+    it('should successfully end queen round when last card is Queen', () => {
+      const state = getState();
+      const player = state.players[0];
+
+      // Set up an active queen round where player is starter
+      state.queenRoundActive = true;
+      state.queenRoundStarterId = player.id;
+      state.queenRoundNeedsFirstQueen = false;
+      player.isQueenRoundStarter = true;
+      player.inQueenRound = true;
+
+      // Place a Queen on discard pile (simulating having just played it)
+      const queen = createCard('hearts', 'Q');
+      state.discardPile.push(queen);
+
+      service.endQueenRound();
+
+      const afterEnd = getState();
+      expect(afterEnd.queenRoundActive).toBe(false);
+      expect(afterEnd.queenRoundStarterId).toBeNull();
+      expect(afterEnd.players[0].inQueenRound).toBe(false);
+      expect(afterEnd.players[0].isQueenRoundStarter).toBe(false);
+    });
+
+    it('should penalize if endQueenRound called with no Queen as last card', () => {
+      const state = getState();
+      const player = state.players[0];
+
+      // Set up active queen round
+      state.queenRoundActive = true;
+      state.queenRoundStarterId = player.id;
+      player.isQueenRoundStarter = true;
+      player.inQueenRound = true;
+
+      // Last card is NOT a Queen
+      const king = createCard('hearts', 'K');
+      state.discardPile.push(king);
+
+      service.endQueenRound();
+
+      const afterEnd = getState();
+      // Queen round should still be active (bad end attempt)
+      expect(afterEnd.queenRoundActive).toBe(true);
+      // Penalty should be assigned (type 'penalty' in chat log)
+      const penaltyLog = afterEnd.chatLog.filter(m => m.type === 'penalty');
+      expect(penaltyLog.length).toBeGreaterThan(0);
+    });
+
+    it('should penalize non-starter who tries to end queen round', () => {
+      const state = getState();
+      const player = state.players[0];
+      const otherPlayer = state.players[1];
+
+      // Set up queen round where OTHER player is starter
+      state.queenRoundActive = true;
+      state.queenRoundStarterId = otherPlayer.id;
+      player.isQueenRoundStarter = false;
+      otherPlayer.isQueenRoundStarter = true;
+
+      // Place a Queen on discard pile
+      const queen = createCard('hearts', 'Q');
+      state.discardPile.push(queen);
+
+      service.endQueenRound();
+
+      const afterEnd = getState();
+      // Queen round should still be active — wrong player tried to end it
+      expect(afterEnd.queenRoundActive).toBe(true);
+    });
+  });
 });

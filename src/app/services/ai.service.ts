@@ -163,13 +163,6 @@ export class AIService {
       return;
     }
 
-    // Check Queen Round end (if starter and last card was Queen)
-    if (state.queenRoundActive && player.isQueenRoundStarter) {
-      const lastWasQueen = lastCard?.rank === 'Q';
-      if (lastWasQueen && this.rng.next() < 0.8) {
-        setTimeout(() => this.gameActions.endQueenRound(), AI_TIMING.QUEEN_ROUND_DELAY);
-      }
-    }
   }
 
   /**
@@ -202,12 +195,21 @@ export class AIService {
   private playBestCard(playableCards: Card[], player: Player, state: GameState): void {
     let cardToPlay = playableCards[0];
 
-    // Queen Round strategy: prefer 10 (60% chance) to extend round
+    // Queen Round strategy
     if (state.queenRoundActive) {
       const queens = playableCards.filter(c => c.rank === 'Q');
       const tens = playableCards.filter(c => c.rank === '10');
 
-      if (tens.length > 0 && this.rng.next() < 0.6) {
+      // If first card of queen round MUST be a Queen, enforce it
+      if (state.queenRoundNeedsFirstQueen && player.isQueenRoundStarter) {
+        if (queens.length > 0) {
+          cardToPlay = queens[0];
+        } else {
+          // No Queen available — should not happen (announceQueenRound validates this)
+          // Fall back to default card
+        }
+      } else if (tens.length > 0 && this.rng.next() < 0.6) {
+        // Prefer 10 (60% chance) to extend round
         cardToPlay = tens[0];
       } else if (queens.length > 0) {
         cardToPlay = queens[0];
@@ -225,12 +227,24 @@ export class AIService {
       this.playJackWithSuitChoice(cardToPlay, player);
     } else {
       const playerId = player.id;
+      const wasQueenRoundStarter = state.queenRoundActive && player.isQueenRoundStarter;
+      const playedQueen = cardToPlay.rank === 'Q';
       setTimeout(() => {
-        // Reset guard BEFORE playCard, because playCard->nextTurn will trigger next AI
+        // Reset guard BEFORE playCard, because playCard->endTurn will trigger next AI
         this.aiTurnInProgress = false;
         this.gameActions.playCard(cardToPlay);
         // Check Mau AFTER playing card (if hand reduced to 1)
         this.checkMauAfterPlay(playerId);
+        // Check Queen Round end AFTER playing a Queen as starter
+        if (wasQueenRoundStarter && playedQueen) {
+          const postState = this.gameActions.getState();
+          const postPlayer = postState.players.find(p => p.id === playerId);
+          const remainingQueens = postPlayer?.hand.filter(c => c.rank === 'Q').length ?? 0;
+          // End if no queens left (always) or probabilistically with 50% chance
+          if (remainingQueens === 0 || this.rng.next() < 0.5) {
+            setTimeout(() => this.gameActions.endQueenRound(), AI_TIMING.QUEEN_ROUND_DELAY);
+          }
+        }
       }, AI_TIMING.ACTION_DELAY);
     }
   }
