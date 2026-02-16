@@ -185,9 +185,7 @@ h1 {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em; /* 6px */
+  display: block;
   padding-right: 0.667em; /* 8px */
 
   /* Scrollbar Styling */
@@ -219,6 +217,7 @@ h1 {
   border-radius: 0.5em; /* 6px */
   font-size: 1em; /* 12px */
   line-height: 1.4;
+  margin-bottom: 0.5em; /* 6px — replaces flex gap */
   animation: chatEntryIn 0.25s ease-out;
   overflow: hidden;
   position: relative;
