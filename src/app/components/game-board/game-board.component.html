@@ -276,8 +276,8 @@
       <!-- Chat Log -->
       <div class="chat-log">
         <h3>Spielverlauf</h3>
-        <div class="chat-messages" #chatMessages>
-          @for (msg of gameState().chatLog; track $index) {
+        <div class="chat-messages">
+          @for (msg of gameState().chatLog.slice().reverse(); track $index) {
             <div class="chat-message" [class]="'type-' + msg.type">
               <span class="timestamp">{{ formatTime(msg.timestamp) }}</span>
               @if (msg.playerName !== 'System') {

@@ -438,7 +438,7 @@ export class GameService implements AIGameActions {
       '7': '7', '8': '8', '9': '9', '10': '10',
       'J': 'Bube', 'Q': 'Dame', 'K': 'König', 'A': 'Ass'
     };
-    return `${rankNames[card.rank]} ${suitNames[card.suit]}`;
+    return `${suitNames[card.suit]} ${rankNames[card.rank]}`;
   }
 
   canPlayCard(card: Card): boolean {

@@ -1,5 +1,4 @@
-import { Component, computed, signal, effect, input, output, inject, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
-import { ScrollingModule } from '@angular/cdk/scrolling';
+import { Component, computed, signal, effect, input, output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { CardComponent } from '../card/card.component';
 import { SuitSelectorComponent } from '../suit-selector/suit-selector.component';
@@ -8,16 +7,12 @@ import { GameSetup } from '../start-screen/start-screen.component';
 
 @Component({
   selector: 'app-game-board',
-  imports: [CardComponent, SuitSelectorComponent, ScrollingModule],
+  imports: [CardComponent, SuitSelectorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-board.component.html',
   styleUrl: './game-board.component.scss'
 })
-export class GameBoardComponent implements AfterViewChecked {
-  @ViewChild('chatMessages') private chatMessagesRef?: ElementRef;
-  private shouldScrollToBottom = false;
-  private lastChatLength = 0;
-
+export class GameBoardComponent {
   protected selectedCard = signal<Card | null>(null);
   protected showSuitSelector = signal<boolean>(false);
   protected showWinOverlay = signal<boolean>(true);
@@ -59,14 +54,6 @@ export class GameBoardComponent implements AfterViewChecked {
       }
     }, { allowSignalWrites: true });
 
-    // Track chat log changes for auto-scroll
-    effect(() => {
-      const state = this.gameState();
-      if (state && state.chatLog.length !== this.lastChatLength) {
-        this.lastChatLength = state.chatLog.length;
-        this.shouldScrollToBottom = true;
-      }
-    });
   }
 
   protected getPlayerAvatar(playerName: string): { type: string, value: string } {
@@ -101,17 +88,6 @@ export class GameBoardComponent implements AfterViewChecked {
     } else {
       this.hoverAvatarUrl.set(null);
       this.hoverAvatarPosition.set(null);
-    }
-  }
-
-  ngAfterViewChecked(): void {
-    if (this.shouldScrollToBottom && this.chatMessagesRef) {
-      try {
-        this.chatMessagesRef.nativeElement.scrollTop = this.chatMessagesRef.nativeElement.scrollHeight;
-        this.shouldScrollToBottom = false;
-      } catch (err) {
-        console.error('Scroll error:', err);
-      }
     }
   }
 
