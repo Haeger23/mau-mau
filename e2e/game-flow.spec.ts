@@ -75,8 +75,11 @@ test.describe('Mau-Mau Game Flow', () => {
     
     await expect(page.locator('[data-testid="player-0-name"]')).toBeVisible();
     
-    // Zurück zum Start
+    // Zurück zum Start - öffnet Bestätigungsdialog
     await page.locator('[data-testid="action-back-to-start"]').click();
+    
+    // Bestätigungsdialog bestätigen
+    await page.locator('.confirm-btn.confirm').click();
     
     // Start Screen sollte wieder da sein
     await expect(page.locator('[data-testid="input-player-name"]')).toBeVisible();
