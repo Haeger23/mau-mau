@@ -1,0 +1,73 @@
+https://turboscribe.ai/
+(0:00) Los geht's. (0:03) Du bist die Karolina, richtig? (0:05) Richtig. (0:07) Du kennst diese Seite hier schon? (0:12) Ja, es ist länger her, dass ich die angeguckt habe.
+(0:15) Aber ja, eigentlich kenne ich die. (0:18) Das ist die gute Mauminus Maupunzera, auf die immer verwiesen wird, (0:21) weil dort die Spielregeln draufstehen. (0:25) Genau? (0:26) Mhm.
+(0:28) Daran habe ich mich grundlegend gehalten (0:30) und deswegen wirst du nicht überrascht sein, wenn du jetzt die Startseite von (0:40) genau, von dem Spiel Maumau Schweizer Regeln siehst. (0:43) Und jetzt würde ich dich einfach bitten, nochmal (0:48) zu spielen? (0:49) Zu spielen. (0:49) Und soll ich einfach kommentieren, was ich so denke dabei? (0:52) Das wäre gut.
+(0:53) Ja? (0:53) Okay, ich möchte Lina heißen. (0:55) Oh, ich bin schon drin. (0:56) Cool.
+(0:58) Oh, die ist aber nett. (1:04) Ich will mit vier Leuten spielen, also brauche ich drei Gegner. (1:08) Spiel starten.
+(1:10) That's me. (1:12) Oh, ich spiele mit Titus, Robert und Hans. (1:14) Cool.
+(1:16) Das ist ja geil. (1:18) Gefällt mir schon mal. (1:20) Das System sagt, das Spiel ist gestartet.
+(1:24) Und die Frage ist, wer ist dran? (1:27) Aber ich bin scheinbar dran, weil hier steht auch zu beenden. (1:31) Damona, Damona, König, oh Gott, wie spiel ich denn? (1:52) Okay, hier steht jetzt alles, was gespielt ist. (1:56) Reflizit, kein Effekt.
+(1:58) Spiel 13. (1:59) Reflizit ist hier, schaut weiter nach unten. (2:02) Spielt Herz 8. (2:05) Hans setzt aus.
+(2:07) Spielt auch ein 8. (2:08) Also muss ich auch... (2:11) Warte mal. (2:15) Titus, Robert spielt Herz. (2:22) Man weiß nicht... (2:23) Ach, König Herz.
+(2:26) Okay, König spielt König Herz. (2:30) Er setzt aus, also bin ich dran. (2:32) Okay, dann kann ich ja das spielen.
+(2:36) Oh, er hält eine Strafkarte. (2:37) Oh Scheiße. (2:40) Geil.
+(2:41) Eine Strafkarte auf einem Stapel. (2:44) Geil. (2:46) Ist das witzig.
+(2:48) Spielt 8. (2:49) Hans setzt aus. (2:51) 7. (2:53) Dina gewinnt. (2:53) Hä, nee, das ist ja nicht richtig.
+(2:55) Ich habe ja eine Strafkarte auf einem Stapel. (2:58) Okay, also da ist noch ein Fehler im System. (3:01) Ich habe ja noch eine Strafkarte.
+(3:02) Er hält eine Strafkarte. (3:03) Ich habe eine Strafkarte zu früh aufgenommen, weil ich meinen Zug noch nicht beendet hatte. (3:08) Was? Warum nochmal? (3:10) Noch keine Aktion durchgeführt.
+(3:11) Karte spielen oder ziehen? (3:13) Das Spiel ist jetzt gewonnen. (3:14) Also da stimmt noch was nicht. (3:16) Wir sind auf einige Bugs geschossen.
+(3:18) Okay, Bug gefunden. (3:21) Also der Bug ist, dass ich noch nicht das Spiel gewonnen haben konnte, (3:25) weil ich noch eine Karte auf meinem Strafstapel hatte. (3:32) Okay.
+(3:34) Aber... (3:34) Jetzt startet das Spiel einfach mal eine neue Partie. (3:40) Geil. (3:41) Ist ja mega.
+(3:44) Richtig cool. (3:46) Aber hier würde ich das mir nochmal angucken, (3:49) weil man sagt Herz König und nicht König Herz. (3:52) Also so im Spiel.
+(3:53) Zumindest kenne ich das so vom Doppelkopf-Spiel. (3:58) König. Das kommt mir noch komisch vor.
+(4:01) Also da würde ich nochmal nachgucken, wie man das richtig sagt. (4:04) Karo 10 würde man sagen. (4:05) Er hat eine Karo 10 gespielt.
+(4:08) Und nicht 10 Karo. (4:12) Das hat mich irgendwie irritiert. (4:13) Spiel beenden.
+Okay. (4:19) Spiel starten. (4:20) Jetzt will ich mal mit 4 spielen.
+(4:22) Mal gucken, wie das ist. (4:23) Wer spielt dann noch mit? (4:24) Willi darf auch mit spielen. (4:28) Und wir sehen ihn.
+(4:30) Sehr gut. (4:31) Okay. (4:34) Also hier am Anfang fehlt mir irgendwie noch, (4:36) dass ich weiß, wer dran ist.
+(4:38) Weil es hätte ja auch jemand anderes... (4:40) Also hier könnte irgendwie noch stehen, (4:42) du bist dran oder sowas. (4:44) Das hätte mir noch geholfen. (4:47) So.
+(4:47) Ich muss ja auch erstmal aussetzen. (4:52) Strafkarte. (4:52) Versuche zuzuwenden.
+(4:53) Noch keine Aktion durchgeführt. (4:55) Ah, okay. (4:56) Das war noch ein Bug.
+(4:57) Die erste Karte zählt ja noch nicht als gültig. (5:03) Ist das ein Bug oder? (5:04) Das sehe ich so, ja. (5:05) Eigentlich müsste ich aussetzen, auch wenn ich dran wäre.
+(5:08) Weil die gilt ja. (5:10) Willi hat ausgegeben und dich aussetzen lassen. (5:17) So.
+(5:19) Spielt Pik 10. (5:21) Kreist, wünscht sich Pik. (5:24) Spielt... (5:24) Willi spielt Pumpe K.O. (5:27) und wünscht sich Pik.
+(5:29) Okay. (5:30) Warte mal, habe ich jetzt... (5:32) Ich beiß mit der Strafkarte nicht so genau. (5:34) Ah ja, doch, die durfte ich aufnehmen.
+(5:35) Ich bin mir nicht sicher, ob das richtig war. (5:37) Pik, ich kann nicht. (5:41) Ach so, keine Aktion gemacht.
+(5:43) Okay, das ist auch ein Fehler. (5:46) Wenn ich nicht kann... (5:47) Ah ne, warte, dann muss ich ja ziehen. (5:48) Das ist ja Quatsch.
+(5:49) Ah ja, falsch gemacht. (5:51) Zieht eine Karte. (5:53) Okay, jetzt kann ich aber immer noch nicht.
+(5:56) Zug beenden. (6:01) Ah, das ist ja auch geil hier. (6:03) Hä? (6:05) Das ging mir jetzt ein bisschen zu schnell.
+(6:09) Vielleicht könnte man als (6:10) zukünftig irgendwie die Spielgeschwindigkeit (6:12) einstellen, weil man will ja mitkriegen, (6:14) was die anderen machen. (6:19) Kann ich? Kann ich noch nicht, oder? (6:20) Du spielst... (6:22) Nee, also du kannst es nachvollziehen im Spielverlauf. (6:24) Genau, ja, das ist klar.
+(6:26) Aber dann muss ich es nachlesen, (6:27) weil das blobbt ja hier auch auf. (6:29) Aber so schnell kann ich gar nicht lesen. (6:31) Es wäre ja schöner, ich könnte es hier mitlesen.
+(6:34) Es müsste ja einfach nur ein bisschen langsamer gehen, (6:36) dass man es hier mitlesen kann. (6:38) Fände ich ganz cool. (6:39) Weil jetzt muss ich hier noch mal nachgucken.
+(6:43) Hat zwei Karten gezogen. (6:45) War da sieben im Spiel? (6:46) Ah ja, hier wurde sieben gespielt. (6:48) Spielt Pik.
+(6:51) König Pik. (6:52) Gut, der liegt hier da. (6:53) Ich bin dran.
+(6:55) Ich kann jetzt meine Strafkarte aufnehmen. (6:59) Und dann... (7:11) Also manchmal steht hier was (7:12) und manchmal nicht. (7:13) So Sachen, die wahrscheinlich bleiben.
+(7:15) Wahrscheinlich wird da auch eine Damenrunde stehen. (7:17) Würde ich mir jetzt vorstellen. (7:24) Hier kann ich den Paragraph (7:26) dazu nachlesen, warum ich eine Strafkarte (7:28) gekriegt habe.
+(7:29) Es ist sogar hier angezeigt. (7:31) Ich dachte, der leitet mich jetzt weiter zur Seite. (7:33) Der Zug wurde vorzeitig beendet.
+(7:35) Es fehlt noch eine Aktion. (7:37) Geil. (7:39) Stark.
+(7:41) Wünscht sich Karo. (7:43) Karo. (7:44) Das war gut.
+(7:47) Nächster Spieler muss zwei Karten ziehen. (7:48) Das steht jetzt hier wegen der sieben. (7:51) Sehr gut.
+Zug beendet. (7:54) Sebastian zieht zwei Karten. (7:56) Entkommt der Strafe.
+(7:57) Plus zwei. (7:58) Das wäre natürlich auch cool, (8:00) wenn es hier oben irgendwie steht. (8:05) Titus.
+(8:06) Der zieht jetzt vier Karten, (8:08) weil er vier spielen muss. (8:09) Acht Pik. (8:14) Guck mal, abgespielt.
+(8:16) Ich kann aber gar nichts machen. (8:17) Ich bin dran. (8:19) Ich müsste doch eigentlich aussetzen, oder? (8:20) Hans spielt.
+(8:21) Nein, du musst. (8:22) Leo muss aussetzen, also bin ich dran. (8:24) Aber ich kann hier gerade nichts machen.
+(8:26) Ja, das wäre irgendwie... (8:28) Okay, dann muss ich wieder ausmachen, oder? (8:32) Kann ich jetzt gar nichts machen. (8:33) Oder kann ich ziehen? (8:35) Das hängt. (8:37) Weißt du warum? (8:38) Ist dir das bekannt? (8:41) Ja, das ist ein bisschen in der Logik noch.
+(8:43) Bei bestimmten Spielzügen (8:45) weiß er noch nicht, (8:46) dass er dann weitermachen soll. (8:48) Und dann verliert er irgendwie. (8:50) Mhm.
+(8:52) Okay. (8:59) Ich mache jetzt einfach mal weiter, ja? (9:01) Ich will jetzt mal jemand anderes sein. (9:03) Ich will jetzt mal du sein.
+(9:05) Ist denn dieser gut aussehende junge Typ? (9:09) Können wir das auch nutzen? (9:10) Zweit spielen? (9:12) Ist ein bisschen langweilig, aber gut. (9:15) So. (9:17) Pik Dame.
+(9:18) Ich muss zwei Karten ziehen. (9:28) Das bin dann wohl ich. (9:30) Ich kann nichts kontern.
+(9:34) Ach, hier wird auch angezeigt, (9:35) wie viele Karten noch im Stapel sind. (9:37) Das habe ich vorher noch nicht gesehen. (9:40) So.
+(9:41) Willi hat zwei Karten gezogen. (9:43) Und ich dürfte ja auch noch mal spielen. (9:48) Aber ich kann nicht.
+(9:49) Also muss ich dann noch einen ziehen jetzt? (9:53) Oder kann ich einfach nicht? (9:57) Ich kann nicht. (9:58) Ich muss aber nicht. (9:59) Ich weiß gar nicht, wie es ist.
+(10:00) Ich ziehe in die Regel nicht. (10:01) Super Enden. (10:02) Das ist richtig.
+(10:04) Dann muss ich noch extra eine ziehen. (10:07) Ich muss schon wieder zwei ziehen. (10:12) Sieben.
+(10:13) Jetzt hast du eine. (10:15) Jetzt habe ich ein Diet, ja. (10:17) Nicht aussetzen.
+(10:18) Das ist doch eine Sieben, oder? (10:20) Ja, aber erstmal kann ich doch die Aussetzen-Karte spielen. (10:23) Ach so, ich hätte dann die A. (10:33) Oh. (10:34) Mit einer Farbe für den Buben.
+(10:37) Ich wünsche mir... (10:39) Schreibt mal ein Pikso. (10:41) Jetzt würde ich auch noch mal nachgucken, (10:43) ob das nicht französisch geschrieben wird. (10:47) Aber... (10:47) Ich will Kreuz.
+(10:51) Oh. (10:54) Hast du nur den Tab gewechselt, glaube ich. (10:59) Du hast es kaputt gemacht.
+(11:01) Ich habe es kaputt gemacht. (11:02) Was ist das für ein gedrückter Mathe? (11:04) Ah, das ist zurück. (11:05) Gehen wir wieder vor.
+(11:11) Aber das mit Buben spielen und Farbe wählen, (11:14) das geht ja schon. (11:14) Nimm mal Ole. (11:20) Eine hübsche Mütze.
+(11:24) Der ist richtig gut getroffen. (11:27) Voll. (11:28) Der sieht aus wie Ole.
+(11:30) Es gibt ein Easter Egg. (11:31) Wenn du länger auf den Avataren bleibst. (11:36) Oh.
+(11:44) Geil, (11:45) der sieht aus wie 18. (11:47) Der junge Hans. (11:49) Der junge, böse Hans.

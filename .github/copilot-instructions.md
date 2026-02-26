@@ -54,3 +54,32 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Version Management
+
+**IMPORTANT: Before every `git push` to the `development` branch:**
+1. Check current version in `package.json`
+2. Increment version following Semantic Versioning (SemVer):
+   - **MAJOR** (X.0.0): Breaking changes, incompatible API changes
+   - **MINOR** (0.X.0): New features, backwards-compatible
+   - **PATCH** (0.0.X): Bug fixes, backwards-compatible
+3. Update version in TWO places:
+   - `package.json` → `"version": "X.Y.Z"`
+   - `src/app/app.html` → `<footer class="version">vX.Y.Z</footer>`
+4. If unsure which increment to use, ASK the user before committing
+
+**Current Version:** 0.1.0
+
+## Branch Protection
+
+**CRITICAL: The `main` branch is PROTECTED**
+- ❌ NEVER push directly to `main`
+- ✅ Always use Pull Requests from `development` or feature branches
+- ✅ Direct pushes to `development` are allowed
+- See `.github/BRANCH_PROTECTION.md` for details
+
+**Workflow:**
+1. Work on `development` or feature branches
+2. Create PR to `main` when ready for production
+3. Wait for CI/CD checks and approval
+4. Merge via GitHub UI only

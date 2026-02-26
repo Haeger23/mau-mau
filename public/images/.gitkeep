@@ -1,0 +1,31 @@
+# Image Assets
+
+Dieser Ordner enthält alle Bilder und grafischen Assets für das Frontend.
+
+## Struktur
+
+```
+images/
+├── icons/          # Icons und kleine Grafiken
+├── cards/          # Kartenbilder (falls gewünscht)
+├── backgrounds/    # Hintergrundbilder
+└── logos/          # Logos und Branding
+```
+
+## Verwendung im Code
+
+```typescript
+// In Angular Templates
+<img src="/images/logo.png" alt="Logo">
+
+// Mit NgOptimizedImage (empfohlen)
+<img ngSrc="/images/logo.png" alt="Logo" width="200" height="100">
+```
+
+## Optimierung
+
+- Verwende WebP für moderne Browser
+- SVG für Icons und Vektorgrafiken
+- PNG für Transparenz
+- JPG für Fotos
+- Komprimiere alle Bilder vor dem Commit

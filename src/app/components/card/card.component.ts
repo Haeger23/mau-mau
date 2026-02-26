@@ -4,12 +4,16 @@ import { Card } from '../../models/card.model';
 @Component({
   selector: 'app-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[attr.clickable]': 'clickable()'
+  },
   template: `
     <div 
       class="card" 
       [class.clickable]="clickable()"
       [class.selected]="selected()"
       [attr.data-suit]="card().suit"
+      [attr.data-testid]="'card-' + card().suit + '-' + card().rank"
       (click)="handleClick()">
       <div class="card-corner top-left">
         <div class="rank">{{ card().rank }}</div>
@@ -26,11 +30,10 @@ import { Card } from '../../models/card.model';
   `,
   styles: [`
     .card {
-      width: 120px;
-      height: 168px;
+      width: 10em; /* 120px */
+      height: 14em; /* 168px */
       background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
-      border: 3px solid #1a1a1a;
-      border-radius: 12px;
+      border-radius: 1em; /* 12px */
       position: relative;
       box-shadow: 
         0 4px 8px rgba(0, 0, 0, 0.15),
@@ -59,12 +62,12 @@ import { Card } from '../../models/card.model';
     .card::after {
       content: '';
       position: absolute;
-      top: 8px;
-      left: 8px;
-      right: 8px;
-      bottom: 8px;
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      border-radius: 8px;
+      top: 0.667em; /* 8px */
+      left: 0.667em; /* 8px */
+      right: 0.667em; /* 8px */
+      bottom: 0.667em; /* 8px */
+      border: 0.083em solid rgba(0, 0, 0, 0.05); /* 1px */
+      border-radius: 0.667em; /* 8px */
       pointer-events: none;
     }
 
@@ -73,22 +76,22 @@ import { Card } from '../../models/card.model';
     }
 
     .card.clickable:hover {
-      transform: translateY(-12px) scale(1.03);
+      transform: translateY(-1em) scale(1.03); /* -12px */
       box-shadow: 
-        0 12px 24px rgba(0, 0, 0, 0.25),
-        0 6px 12px rgba(0, 0, 0, 0.15),
-        0 0 0 3px rgba(76, 175, 80, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        0 1em 2em rgba(0, 0, 0, 0.25), /* 0 12px 24px */
+        0 0.5em 1em rgba(0, 0, 0, 0.15), /* 0 6px 12px */
+        0 0 0 0.25em rgba(76, 175, 80, 0.3), /* 0 0 0 3px */
+        inset 0 0.083em 0 rgba(255, 255, 255, 0.9); /* inset 0 1px 0 */
       border-color: #4CAF50;
     }
 
     .card.selected {
-      transform: translateY(-16px) scale(1.05);
+      transform: translateY(-1.333em) scale(1.05); /* -16px */
       box-shadow: 
-        0 16px 32px rgba(0, 0, 0, 0.3),
-        0 8px 16px rgba(0, 0, 0, 0.2),
-        0 0 0 4px #4CAF50,
-        inset 0 2px 4px rgba(76, 175, 80, 0.1);
+        0 1.333em 2.667em rgba(0, 0, 0, 0.3), /* 0 16px 32px */
+        0 0.667em 1.333em rgba(0, 0, 0, 0.2), /* 0 8px 16px */
+        0 0 0 0.333em #4CAF50, /* 0 0 0 4px */
+        inset 0 0.167em 0.333em rgba(76, 175, 80, 0.1); /* inset 0 2px 4px */
       border-color: #4CAF50;
       background: linear-gradient(to bottom, #f0fff0 0%, #e8f5e9 100%);
     }
@@ -99,7 +102,7 @@ import { Card } from '../../models/card.model';
       flex-direction: column;
       align-items: center;
       font-weight: 900;
-      padding: 8px;
+      padding: 0.667em; /* 8px */
       z-index: 1;
     }
 
@@ -115,17 +118,17 @@ import { Card } from '../../models/card.model';
     }
 
     .rank {
-      font-size: 24px;
+      font-size: 2em; /* 24px */
       line-height: 1;
       font-family: 'Georgia', 'Times New Roman', serif;
       font-weight: 900;
-      letter-spacing: -1px;
+      letter-spacing: -0.083em; /* -1px */
     }
 
     .suit {
-      font-size: 22px;
+      font-size: 1.833em; /* 22px */
       line-height: 1;
-      margin-top: 2px;
+      margin-top: 0.167em; /* 2px */
     }
 
     .card-center {
@@ -137,46 +140,46 @@ import { Card } from '../../models/card.model';
     }
 
     .suit-large {
-      font-size: 64px;
+      font-size: 5.333em; /* 64px */
       opacity: 0.85;
     }
 
     [data-suit="hearts"] .rank,
     [data-suit="hearts"] .suit {
-      color: #DC143C;
-      text-shadow: 0 1px 2px rgba(220, 20, 60, 0.3);
+      color: #ff0000;
+      text-shadow: 0 0.083em 0.167em rgba(255, 0, 0, 0.3); /* 0 1px 2px */
     }
 
     [data-suit="diamonds"] .rank,
     [data-suit="diamonds"] .suit {
-      color: #FF4500;
-      text-shadow: 0 1px 2px rgba(255, 69, 0, 0.3);
+      color: #ff0000;
+      text-shadow: 0 0.083em 0.167em rgba(255, 0, 0, 0.3); /* 0 1px 2px */
     }
 
     [data-suit="clubs"] .rank,
     [data-suit="clubs"] .suit {
-      color: #1a1a1a;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      color: #000000;
+      text-shadow: 0 0.083em 0.167em rgba(0, 0, 0, 0.4); /* 0 1px 2px */
     }
 
     [data-suit="spades"] .rank,
     [data-suit="spades"] .suit {
       color: #000000;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 0.083em 0.167em rgba(0, 0, 0, 0.5); /* 0 1px 2px */
     }
 
     [data-suit="hearts"] .suit-large,
     [data-suit="diamonds"] .suit-large {
-      color: #DC143C;
-      text-shadow: 0 2px 4px rgba(220, 20, 60, 0.3);
-      filter: drop-shadow(0 2px 4px rgba(220, 20, 60, 0.2));
+      color: #ff0000;
+      text-shadow: 0 0.167em 0.333em rgba(255, 0, 0, 0.3); /* 0 2px 4px */
+      filter: drop-shadow(0 0.167em 0.333em rgba(255, 0, 0, 0.2)); /* 0 2px 4px */
     }
 
     [data-suit="clubs"] .suit-large,
     [data-suit="spades"] .suit-large {
-      color: #1a1a1a;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      color: #000000;
+      text-shadow: 0 0.167em 0.333em rgba(0, 0, 0, 0.4); /* 0 2px 4px */
+      filter: drop-shadow(0 0.167em 0.333em rgba(0, 0, 0, 0.3)); /* 0 2px 4px */
     }
   `]
 })
