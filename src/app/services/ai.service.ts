@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Card, Suit } from '../models/card.model';
 import { GameState } from '../models/game-state.model';
 import { Player } from '../models/player.model';

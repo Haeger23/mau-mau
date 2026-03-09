@@ -51,6 +51,7 @@ Rules:
 - Subject line: max 72 characters, imperative mood, no trailing period
 - Add a body only if the change is complex enough to need explanation
 - If a version bump was performed, the first line must be `chore: Bump version to <new-version>` followed by a blank line and then the change description
+- Do not append a "Co-Authored-By" hint at the end
 
 ## Step 5: Commit
 

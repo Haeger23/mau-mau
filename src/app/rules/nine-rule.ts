@@ -27,7 +27,7 @@ export class NineRule implements CardRule {
     return newState;
   }
 
-  canPlay(card: Card, state: GameState): boolean {
+  canPlay(_card: Card, _state: GameState): boolean {
     // A 9 can be played following normal rules.
     // It starts a 9-base chain where the player can play more same-suit cards.
     return true;

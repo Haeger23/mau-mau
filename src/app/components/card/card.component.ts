@@ -8,13 +8,17 @@ import { Card } from '../../models/card.model';
     '[attr.clickable]': 'clickable()'
   },
   template: `
-    <div 
-      class="card" 
+    <div
+      class="card"
       [class.clickable]="clickable()"
       [class.selected]="selected()"
       [attr.data-suit]="card().suit"
       [attr.data-testid]="'card-' + card().suit + '-' + card().rank"
-      (click)="handleClick()">
+      [attr.tabindex]="clickable() ? 0 : null"
+      [attr.role]="clickable() ? 'button' : null"
+      (click)="handleClick()"
+      (keydown.enter)="handleClick()"
+      (keydown.space)="handleClick()">
       <div class="card-corner top-left">
         <div class="rank">{{ card().rank }}</div>
         <div class="suit">{{ getSuitSymbol() }}</div>

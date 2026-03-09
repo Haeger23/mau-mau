@@ -14,7 +14,7 @@ export class QueenRule implements CardRule {
     return card.rank === 'Q';
   }
 
-  applyEffect(state: GameState, card: Card): GameState {
+  applyEffect(state: GameState, _card: Card): GameState {
     // Queens have no automatic effect.
     // The Queen Round is started/ended via announcements, not by playing a Queen.
     // When a Queen is played during a Queen Round, the player joins the round.

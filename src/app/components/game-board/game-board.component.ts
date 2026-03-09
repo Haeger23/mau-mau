@@ -4,6 +4,7 @@ import { CardComponent } from '../card/card.component';
 import { SuitSelectorComponent } from '../suit-selector/suit-selector.component';
 import { Card, Suit } from '../../models/card.model';
 import { GameSetup } from '../start-screen/start-screen.component';
+import { ChatMessage } from '../../models/game-state.model';
 
 @Component({
   selector: 'app-game-board',
@@ -19,7 +20,7 @@ export class GameBoardComponent {
   protected showExitConfirmation = signal<boolean>(false);
   protected hoverAvatarUrl = signal<string | null>(null);
   protected hoverAvatarPosition = signal<{ x: number, y: number } | null>(null);
-  private hoverTimeout: any = null;
+  private hoverTimeout: ReturnType<typeof setTimeout> | null = null;
 
   gameSetup = input.required<GameSetup>();
   returnToStart = output<void>();
@@ -125,7 +126,7 @@ export class GameBoardComponent {
     return this.gameService.canPlayCard(card);
   }
 
-  isCardClickable(card: Card): boolean {
+  isCardClickable(_card: Card): boolean {
     // Alle Karten sind klickbar (auch ungültige)
     // Ungültige Züge führen zu Strafkarten
     return true;
@@ -222,7 +223,7 @@ export class GameBoardComponent {
     }
   }
 
-  toggleRuleExplanation(msg: any): void {
+  toggleRuleExplanation(msg: ChatMessage): void {
     msg.showExplanation = !msg.showExplanation;
   }
 

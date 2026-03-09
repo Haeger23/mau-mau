@@ -21,6 +21,15 @@ module.exports = tseslint.config(
       ...angular.configs.tsRecommended,
     ],
     processor: angular.processInlineTemplates,
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+    },
   },
   {
     files: ['**/*.html'],
