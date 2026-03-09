@@ -157,8 +157,8 @@ describe('StartScreenComponent', () => {
     });
 
     it('sollte "Spielregeln:" Überschrift haben', () => {
-      const rulesTitle = fixture.nativeElement.querySelector('.rules-preview h3');
-      expect(rulesTitle.textContent).toContain('Spielregeln');
+      const rulesTitle = fixture.nativeElement.querySelector('.rules-preview a');
+      expect(rulesTitle.textContent.trim()).toContain('Spielregeln');
     });
   });
 });

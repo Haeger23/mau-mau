@@ -15,10 +15,11 @@ export interface GameSetup {
     <div class="start-screen">
       <!-- Hero Section with Logo -->
       <header class="hero-section">
-        <div class="logo-container">
-          <img src="/mau-mau-logo.svg" alt="Mau-Mau Logo" class="logo">
-        </div>
-        <h1 class="tagline">Die in der Schweiz typische Spielart <br />auf einhundert</h1>
+        <h1 class="logo-container">
+          <img src="/mau-mau-logo.svg" alt="" role="presentation" class="logo">
+          <span class="sr-only">Mau-Mau</span>
+        </h1>
+        <p class="tagline">Die in der Schweiz typische Spielart <br />auf einhundert</p>
       </header>
 
       <!-- Game Settings Section -->
@@ -39,6 +40,7 @@ export interface GameSetup {
                   }
                 </div>
                 <div class="name-input-wrapper">
+                  <label for="playerName" class="sr-only">Dein Name</label>
                   <input 
                   id="playerName"
                   type="text" 
@@ -141,7 +143,21 @@ export interface GameSetup {
     .logo-container {
       max-width: 26.667em; /* 320px */
       width: 100%;
-      margin-bottom: 1.667em; /* 20px */
+      margin: 0 0 1.667em; /* reset h1 margin */
+      padding: 0; /* reset h1 padding */
+      font-size: 1em; /* reset h1 font-size */
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .logo {
