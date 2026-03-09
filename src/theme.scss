@@ -1,0 +1,124 @@
+// Material Design 3 (Material You) Theme Configuration
+// Using Angular Material 3 with custom Mau-Mau branding
+
+@use '@angular/material' as mat;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Create the M3 theme with simplified configuration
+// Using built-in palette generator with custom colors
+$mau-mau-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$red-palette,
+  ),
+  typography: (
+    brand-family: 'Lato, sans-serif',
+    plain-family: 'Lato, sans-serif',
+  ),
+  density: (
+    scale: 0,
+  )
+));
+
+// Include the theme styles
+:root {
+  @include mat.all-component-themes($mau-mau-theme);
+
+  // Override with custom colors to match Mau-Mau branding
+  // Material tokens can be overridden here
+  --mat-sys-primary: #000000;
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #e6e6e6;
+  --mat-sys-on-primary-container: #000000;
+
+  --mat-sys-secondary: #5e5f61;
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #e2e2e4;
+  --mat-sys-on-secondary-container: #1a1c1e;
+
+  --mat-sys-tertiary: #ff0000;
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: #ffdad6;
+  --mat-sys-on-tertiary-container: #410002;
+
+  --mat-sys-error: #ba1a1a;
+  --mat-sys-on-error: #ffffff;
+  --mat-sys-error-container: #ffdad6;
+  --mat-sys-on-error-container: #410002;
+
+  --mat-sys-background: #ffffff;
+  --mat-sys-on-background: #000000;
+  --mat-sys-surface: #ffffff;
+  --mat-sys-on-surface: #000000;
+  --mat-sys-surface-variant: #e2e2e4;
+  --mat-sys-on-surface-variant: #46484a;
+
+  --mat-sys-outline: #76777a;
+  --mat-sys-outline-variant: #c6c6c8;
+
+  // Elevation shadows (minimal for Swiss design)
+  --mat-sys-shadow: rgba(0, 0, 0, 0.2);
+}
+
+// Custom Material overrides to match Mau-Mau style
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-unelevated-button {
+  // Match existing button style
+  border-radius: 4px !important;
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: 'Lato, sans-serif';
+  min-height: auto;
+  padding: 8px 12px;
+
+  &.mat-mdc-outlined-button {
+    border-width: 2px;
+  }
+}
+
+// Ensure Material components respect the minimalist design
+.mat-mdc-card {
+  border: 2px solid var(--mat-sys-outline);
+  border-radius: 4px;
+
+  &.mat-mdc-card-outlined {
+    border-width: 2px;
+  }
+}
+
+// Form fields with minimal design
+.mat-mdc-form-field {
+  font-family: 'Lato, sans-serif';
+
+  .mat-mdc-text-field-wrapper {
+    border-radius: 4px;
+  }
+}
+
+// Chips with minimal rounded corners
+.mat-mdc-chip {
+  border-radius: 4px !important;
+}
+
+// Dialog customization
+.mat-mdc-dialog-container {
+  border: 2px solid var(--mat-sys-outline);
+  border-radius: 4px;
+}
+
+// Snackbar customization
+.mat-mdc-snack-bar-container {
+  border: 2px solid var(--mat-sys-outline);
+  border-radius: 4px;
+}
+
+// Tooltip customization
+.mat-mdc-tooltip {
+  border-radius: 4px;
+  font-family: 'Lato, sans-serif';
+}
