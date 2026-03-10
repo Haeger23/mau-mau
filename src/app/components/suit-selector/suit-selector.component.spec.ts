@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SuitSelectorComponent } from './suit-selector.component';
-import { Suit } from '../../models/card.model';
 
 describe('SuitSelectorComponent', () => {
   let component: SuitSelectorComponent;

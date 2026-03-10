@@ -7,7 +7,7 @@ export class AceRule implements CardRule {
     return card.rank === 'A';
   }
 
-  applyEffect(state: GameState, card: Card): GameState {
+  applyEffect(state: GameState, _card: Card): GameState {
     const newState = { ...state };
     newState.activeAce = true; // This flag will be used by the turn logic to skip the next player
     return newState;

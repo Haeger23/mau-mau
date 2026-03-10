@@ -7,7 +7,7 @@ export class JackRule implements CardRule {
     return card.rank === 'J';
   }
 
-  applyEffect(state: GameState, card: Card): GameState {
+  applyEffect(state: GameState, _card: Card): GameState {
     const newState = { ...state };
     // The logic for choosing a suit is handled in the UI and passed to the service.
     // The service will set `chosenSuit`. This rule just marks that a choice is needed.

@@ -7,7 +7,7 @@ export class EightRule implements CardRule {
     return card.rank === '8';
   }
 
-  applyEffect(state: GameState, card: Card): GameState {
+  applyEffect(state: GameState, _card: Card): GameState {
     const newState = { ...state };
     newState.skipNext = true;
     // When an 8 is played, any suit wish from a Jack is cancelled.
@@ -15,7 +15,7 @@ export class EightRule implements CardRule {
     return newState;
   }
 
-  canPlay(card: Card, state: GameState): boolean {
+  canPlay(_card: Card, _state: GameState): boolean {
     // Standard play rules apply.
     return true;
   }

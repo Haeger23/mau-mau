@@ -1,7 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 
+// ========== MATERIAL DESIGN 3 INTEGRATION ==========
+@use './theme.scss';
+
 // ========== DESIGN SYSTEM - Schweizer Mau-Mau ==========
 // Inspiriert von mau-mau.ch: minimalistisch, schwarz/weiß, klare Strukturen
+// Enhanced with Material Design 3 (Material You) components
 
 // CSS Variables
 :root {

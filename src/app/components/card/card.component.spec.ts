@@ -161,11 +161,11 @@ describe('CardComponent', () => {
   });
 
   describe('Alle Karten-Ränge', () => {
-    const ranks = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const ranks = ['7', '8', '9', '10', 'J', 'Q', 'K', 'A'] as const;
 
     ranks.forEach(rank => {
       it(`sollte Rang ${rank} korrekt rendern`, () => {
-        const card: Card = { id: '1', suit: 'hearts', rank: rank as any };
+        const card: Card = { id: '1', suit: 'hearts', rank };
         fixture.componentRef.setInput('card', card);
         fixture.detectChanges();
 

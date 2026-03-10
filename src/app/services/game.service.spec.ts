@@ -228,8 +228,7 @@ describe('GameService', () => {
       // Start game and find a state where top card is Jack
       // For this test, we rely on the canPlayCard logic
       service.startNewGame(['Player1', 'Player2']);
-      const jack = createCard('hearts', 'J');
-      
+
       // The canPlayCard method checks state internally
       // We can verify the rule exists by checking behavior
       // Since we can't set state, we test the method signature
@@ -237,7 +236,6 @@ describe('GameService', () => {
     });
 
     it('should allow 10 (replicator) on most cards', () => {
-      const ten = createCard('hearts', '10');
       // 10 should generally be playable as it's a replicator
       expect(typeof service.canPlayCard).toBe('function');
     });
@@ -477,10 +475,8 @@ describe('GameService', () => {
       state.discardPile.push(firstJack);
       state.discardPile.push(secondJack);
       state.lastPlayedCard = secondJack;
-      
+
       // 10 would replicate the Jack, which can't be played on Jack
-      const ten = createCard('diamonds', '10');
-      
       // When top card is Jack, 10 can be played but it replicates Jack
       // The rule engine should handle this - 10 on Jack is technically allowed
       // but 10 replicating Jack on Jack is not

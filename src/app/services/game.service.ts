@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { Card, RANKS, SUITS, Suit, Rank } from '../models/card.model';
+import { Card, RANKS, SUITS, Suit } from '../models/card.model';
 import { Player } from '../models/player.model';
-import { GameState } from '../models/game-state.model';
+import { GameState, ChatMessage } from '../models/game-state.model';
 import { SeededRandom } from '../../utils/seeded-random';
 import { RuleEngine } from './rule-engine.service';
 import { AIService, AIGameActions } from './ai.service';
@@ -263,7 +263,7 @@ export class GameService implements AIGameActions {
     ruleKey?: string
   ): void {
     const state = this.gameState();
-    const chatMessage: any = {
+    const chatMessage: ChatMessage = {
       timestamp: new Date(),
       playerName,
       message,
@@ -738,12 +738,12 @@ export class GameService implements AIGameActions {
     const currentPlayer = state.players[state.currentPlayerIndex];
 
     switch (card.rank) {
-      case '7':
+      case '7': {
         // 7er-Kette: Nächster Spieler muss 2 Karten ziehen (kann sich akkumulieren)
         // Wenn bereits eine 7er-Strafe aktiv ist, entkommt der Spieler durch die 7
         const wasEscaping = state.drawPenalty > 0;
         state.drawPenalty += 2;
-        
+
         if (wasEscaping) {
           // Spieler entkommt der Strafe - reset counters
           currentPlayer.requiredDrawCount = 0;
@@ -753,27 +753,27 @@ export class GameService implements AIGameActions {
           this.addChatLog(currentPlayer.name, `spielt 7 → nächster Spieler muss 2 Karten ziehen`, 'play');
         }
         break;
+      }
       
-      case '8':
+      case '8': {
         // Nächster Spieler wird übersprungen
         state.skipNext = true;
-        // Ermittle den Namen des nächsten Spielers
-        const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-        const nextPlayer = state.players[nextPlayerIndex];
+        // Nächster Spieler wird übersprungen
         // Kein separater Log - wird beim playCard combined
         break;
+      }
 
       case '9':
         // 9er Basiskarte: Wird in playCard() durch additionalCard Parameter behandelt
         // Wenn die 9 alleine gespielt wird, hat sie keinen speziellen Effekt
         break;
 
-      case '10':
+      case '10': {
         // 10er Replikator: Kopiert die Karte darunter
         const cardBelow = state.discardPile[state.discardPile.length - 2]; // Die Karte VOR der 10
         if (cardBelow) {
           const currentPlayer = state.players[state.currentPlayerIndex];
-          
+
           // 10 auf Bube = Bube-Replikation = Bube auf Bube (VERBOTEN!)
           if (cardBelow.rank === 'J') {
             // Die 10 muss zurück auf die Hand
@@ -801,7 +801,7 @@ export class GameService implements AIGameActions {
           
           // Effekt der Karte darunter anwenden
           switch (cardBelow.rank) {
-            case '7':
+            case '7': {
               const wasEscapingWith10 = state.drawPenalty > 0;
               state.drawPenalty += 2;
               if (wasEscapingWith10) {
@@ -813,21 +813,24 @@ export class GameService implements AIGameActions {
                 this.addChatLog(currentPlayer.name, 'repliziert die 7 → +2 Strafkarten', 'play');
               }
               break;
-            
-            case '8':
+            }
+
+            case '8': {
               state.skipNext = true;
               // Kein separater Log - wird kombiniert angezeigt
               break;
-            
-            case 'Q':
+            }
+
+            case 'Q': {
               // Spieler tritt der Damenrunde bei
               if (state.queenRoundActive) {
                 currentPlayer.inQueenRound = true;
                 this.addChatLog(currentPlayer.name, 'repliziert die Dame → tritt Damenrunde bei', 'queen-round');
               }
               break;
+            }
             
-            case '10':
+            case '10': {
               // 10 auf 10: Kopiere die Karte DARUNTER (rekursiv)
               const cardBelowBelow = state.discardPile[state.discardPile.length - 3];
               if (cardBelowBelow) {
@@ -838,19 +841,23 @@ export class GameService implements AIGameActions {
                 if (temp) state.discardPile.push(temp); // 10 zurücklegen
               }
               break;
-            
-            case 'A':
+            }
+
+            case 'A': {
               state.activeAce = true;
               this.addChatLog(currentPlayer.name, `repliziert ${this.getCardDisplayName(cardBelow)} - ist erneut am Zug`, 'play');
               break;
+            }
 
             // Andere Karten haben keinen kopierbaren Effekt
-            default:
+            default: {
               this.addChatLog(currentPlayer.name, `repliziert ${this.getCardDisplayName(cardBelow)} (kein Effekt)`, 'play');
               break;
+            }
           }
         }
         break;
+      }
       
       case 'J':
         // Spieler muss Farbe wählen - wird separat behandelt

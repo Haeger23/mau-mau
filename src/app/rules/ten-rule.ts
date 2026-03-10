@@ -16,7 +16,7 @@ export class TenRule implements CardRule {
     return card.rank === '10';
   }
 
-  applyEffect(state: GameState, card: Card): GameState {
+  applyEffect(state: GameState, _card: Card): GameState {
     // The actual 10-replication effect is handled in GameService.applyCardEffect()
     // because it needs to recursively apply the effect of the card below.
     // This rule just resets the suit choice if any.

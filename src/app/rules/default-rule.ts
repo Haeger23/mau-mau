@@ -1,14 +1,14 @@
-import { Card, Suit } from '../models/card.model';
+import { Card } from '../models/card.model';
 import { GameState } from '../models/game-state.model';
 import { CardRule } from './card-rule.interface';
 
 export class DefaultRule implements CardRule {
-  isApplicable(card: Card): boolean {
+  isApplicable(_card: Card): boolean {
     // This rule is always applicable as a fallback.
     return true;
   }
 
-  applyEffect(state: GameState, card: Card): GameState {
+  applyEffect(state: GameState, _card: Card): GameState {
     const newState = { ...state };
     // The default action is to clear any chosen suit from a previous Jack.
     newState.chosenSuit = null;
