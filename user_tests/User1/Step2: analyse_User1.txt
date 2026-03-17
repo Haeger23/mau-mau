@@ -1,6 +1,6 @@
-# User Test Analyse - Lina
+# User Test Analyse
 ## Datum: 6. Februar 2026
-## Testperson: Carolina (Lina)
+## Testperson 1
 
 ---
 
@@ -27,14 +27,14 @@
 **Zeitstempel:** 4:34 - 4:47
 **Beschreibung:** Es fehlt eine klare Anzeige, welcher Spieler am Zug ist.
 **Zitat:** "Also hier am Anfang fehlt mir irgendwie noch, dass ich weiß, wer dran ist. [...] Also hier könnte irgendwie noch stehen, du bist dran oder sowas."
-**Empfehlung:** Deutliche visuelle Anzeige "Du bist dran" oder Hervorhebung des aktiven Spielers.
+**Empfehlung:** Deutliche visuelle Anzeige des aktiven Spielers. Zoome das Avatar Bild, mache es also etwas größer bei demjenigen der dran ist
 
 ### Verbesserung 3: Spielgeschwindigkeit einstellbar machen
 **Zeitstempel:** 6:01 - 6:38
 **Beschreibung:** Die KI-Züge sind zu schnell, um mitzulesen.
 **Zitat:** "Das ging mir jetzt ein bisschen zu schnell. Vielleicht könnte man als zukünftig irgendwie die Spielgeschwindigkeit einstellen, weil man will ja mitkriegen, was die anderen machen."
 **Weiteres Zitat:** "Aber so schnell kann ich gar nicht lesen. Es wäre ja schöner, ich könnte es hier mitlesen."
-**Empfehlung:** Option für Spielgeschwindigkeit (langsam/normal/schnell) auf der Startseite oder in den Einstellungen.
+**Empfehlung:** Option für Spielgeschwindigkeit innheralb des Spiels, also jederzeit anpassbar mit einem schieberegler (langsam zu schnell).
 
 ### Verbesserung 4: Strafkartenanzeige bei +2/+4
 **Zeitstempel:** 7:58 - 8:05

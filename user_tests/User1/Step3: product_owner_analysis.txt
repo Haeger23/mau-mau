@@ -1,0 +1,459 @@
+# Product Owner Analysis: User Test Session with User1
+## Mau-Mau (Schweizer Regeln) - User Testing Report
+## Date: 12. Februar 2026
+## Test Duration: ~11:50 minutes
+## Tester: Karolina (Lina) - Experienced with Swiss Mau-Mau rules
+
+---
+
+## EXECUTIVE SUMMARY
+
+This user test revealed **3 critical game-breaking bugs**, several **significant UX friction points**, but also strong **positive validation** of core features like the avatar system and rule explanations. The tester demonstrated good understanding of game rules, which makes her feedback particularly valuable for identifying system logic errors vs. UI/UX issues.
+
+**Overall Sentiment:** Positive with reservations. The tester expressed enthusiasm ("Das ist ja geil", "Richtig cool", "Geil. Stark.") but was frustrated by bugs that interrupted gameplay flow.
+
+**Key Insight:** The game has excellent foundational features (avatars, rule tooltips, game log) but critical bugs and missing UI clarity prevent it from being production-ready.
+
+---
+
+## CRITICAL ISSUES (P0 - Must Fix Before Launch)
+
+### 1. GAME-BREAKING BUG: Premature Win Condition
+**Timestamp:** 2:53 - 3:25  
+**Severity:** CRITICAL  
+**Impact:** Violates core game rules
+
+**Evidence:**
+- "Lina gewinnt. Hä, nee, das ist ja nicht richtig. Ich habe ja eine Strafkarte auf einem Stapel."
+- "Der Bug ist, dass ich noch nicht das Spiel gewonnen haben konnte, weil ich noch eine Karte auf meinem Strafstapel hatte."
+
+**Root Cause:** Win condition checks hand size only, ignores penalty card stack.
+
+**Acceptance Criteria:**
+- Win condition must validate: `hand.length === 0 AND penaltyCards.length === 0`
+- Test scenario: Player with 1 card in hand and 1 penalty card plays last hand card → should NOT trigger win
+
+**Business Impact:** HIGH - Undermines game integrity and user trust in rule implementation.
+
+---
+
+### 2. GAME-BREAKING BUG: Initial Card Effect Not Applied
+**Timestamp:** 4:47 - 5:08  
+**Severity:** CRITICAL  
+**Impact:** First turn logic broken
+
+**Evidence:**
+- "Die erste Karte zählt ja noch nicht als gültig."
+- "Eigentlich müsste ich aussetzen, auch wenn ich dran wäre. Weil die gilt ja."
+
+**Root Cause:** Start-of-game card effects (e.g., 8 = skip) not processed before first player's turn.
+
+**Acceptance Criteria:**
+- Initial revealed card must apply its effect before first turn
+- Test scenarios:
+  - Initial 8 → First player skipped
+  - Initial 7 → First player must draw or counter
+  - Initial Jack → First player must play chosen suit or draw
+
+**Business Impact:** HIGH - First turn is the most critical for player engagement.
+
+---
+
+### 3. GAME-BREAKING BUG: Game Hangs on Specific Sequences
+**Timestamp:** 8:16 - 8:50  
+**Severity:** CRITICAL  
+**Impact:** Forces game abandonment
+
+**Evidence:**
+- "Ich kann aber gar nichts machen. Ich bin dran. [...] Das hängt."
+- Developer acknowledgment: "Bei bestimmten Spielzügen weiß er noch nicht, dass er dann weitermachen soll."
+
+**Context:** Occurred after 8 was played (skip effect) in a complex turn sequence.
+
+**Root Cause:** State machine doesn't properly advance on certain effect chains.
+
+**Acceptance Criteria:**
+- Game must never enter unresponsive state
+- All valid card effects must resolve and pass turn appropriately
+- Add timeout safety: if no action for 30s, offer "Skip Turn" button
+
+**Business Impact:** CRITICAL - Complete loss of user session, damages reputation.
+
+---
+
+## HIGH-PRIORITY UX ISSUES (P1)
+
+### 4. Card Naming Convention Non-Standard
+**Timestamp:** 3:46 - 4:12  
+**Severity:** HIGH  
+**Impact:** Cognitive load, confusion
+
+**Evidence:**
+- "Man sagt Herz König und nicht König Herz."
+- "Karo 10 würde man sagen. Er hat eine Karo 10 gespielt. Und nicht 10 Karo."
+- "Das hat mich irgendwie irritiert."
+
+**User Background:** Tester references Doppelkopf conventions (German card game standard).
+
+**Current Pattern:** `{Rank} {Suit}` (e.g., "König Herz", "10 Karo")  
+**Expected Pattern:** `{Suit} {Rank}` (e.g., "Herz König", "Karo 10")
+
+**Change Required:**
+- Update all chat log messages
+- Update status displays
+- Verify localization matches German speaking conventions
+
+**Acceptance Criteria:**
+- All card references follow `{Suit} {Rank}` pattern
+- User testing with German players confirms natural feel
+
+**Business Impact:** MEDIUM - Reduces cognitive friction, increases perceived polish.
+
+---
+
+### 5. Missing "Your Turn" Indicator
+**Timestamp:** 1:24 - 1:27, 4:34 - 4:47  
+**Severity:** HIGH  
+**Impact:** Player confusion about game state
+
+**Evidence:**
+- "Und die Frage ist, wer ist dran?"
+- "Also hier am Anfang fehlt mir irgendwie noch, dass ich weiß, wer dran ist."
+- "Hier könnte irgendwie noch stehen, du bist dran oder sowas. Das hätte mir noch geholfen."
+
+**Current State:** Player determines turn by inferring from context (button availability, player highlighting).
+
+**Proposed Solution:**
+- Prominent "DU BIST DRAN" banner when player is active
+- Consider pulse/glow animation on player card border
+- Optional: Subtle sound notification
+
+**Acceptance Criteria:**
+- Clear visual indicator within 100ms of turn start
+- Indicator persists until action taken
+- Accessible text for screen readers
+
+**Business Impact:** MEDIUM - Reduces turn response time, improves game flow.
+
+---
+
+### 6. Game Speed Too Fast to Follow
+**Timestamp:** 6:05 - 6:39  
+**Severity:** HIGH  
+**Impact:** Player disorientation, reduced enjoyment
+
+**Evidence:**
+- "Das ging mir jetzt ein bisschen zu schnell."
+- "Vielleicht könnte man als zukünftig irgendwie die Spielgeschwindigkeit einstellen."
+- "Aber so schnell kann ich gar nicht lesen. Es wäre ja schöner, ich könnte es hier mitlesen."
+- "Es müsste ja einfach nur ein bisschen langsamer gehen, dass man es hier mitlesen kann."
+
+**Current State:** AI turns execute instantly, chat log updates too fast to read.
+
+**Proposed Solution:**
+1. **Immediate:** Add configurable AI delay (default: 2 seconds between actions)
+2. **Phase 2:** Add speed setting on start screen:
+   - Langsam (Slow): 3-4s delay
+   - Normal: 2s delay
+   - Schnell (Fast): 0.5s delay
+
+**Acceptance Criteria:**
+- User can read and comprehend AI actions in real-time at "Normal" speed
+- Speed persists across games in same session
+- Default speed validated through additional user testing
+
+**Business Impact:** HIGH - Directly affects user enjoyment and learning curve.
+
+---
+
+## MEDIUM-PRIORITY UX IMPROVEMENTS (P2)
+
+### 7. Penalty Card (+2/+4) Counter Not Prominent
+**Timestamp:** 7:47 - 8:05  
+**Severity:** MEDIUM  
+**Impact:** Missed critical game information
+
+**Evidence:**
+- "Nächster Spieler muss zwei Karten ziehen. Das steht jetzt hier wegen der sieben."
+- "Das wäre natürlich auch cool, wenn es hier oben irgendwie steht."
+
+**Current State:** Penalty information only in chat log and status area.
+
+**Proposed Solution:**
+- Large `+2`, `+4`, `+6`, etc. badge over discard pile
+- Red pulsing border on discard pile when penalty active
+- Update badge as sevens chain
+
+**Acceptance Criteria:**
+- Penalty counter visible at all times when active
+- Distinct visual treatment (color, size, animation)
+- Updates in real-time as chain grows
+
+**Business Impact:** MEDIUM - Improves strategic decision-making clarity.
+
+---
+
+### 8. Penalty Card Mechanics Unclear
+**Timestamp:** 5:32 - 5:37, 9:43 - 10:04  
+**Severity:** MEDIUM  
+**Impact:** User uncertainty about legal moves
+
+**Evidence:**
+- "Ich beiß mit der Strafkarte nicht so genau. [...] Ich bin mir nicht sicher, ob das richtig war."
+- "Willi hat zwei Karten gezogen. Und ich dürfte ja auch noch mal spielen. Aber ich kann nicht."
+- "Also muss ich dann noch einen ziehen jetzt? Oder kann ich einfach nicht?"
+
+**Root Cause:** Complex penalty rules (locked vs. pickupable) not intuitive.
+
+**Proposed Solution:**
+1. Color-code penalty cards: 
+   - Red border = locked (must wait)
+   - Yellow border = pickupable
+2. Tooltip on hover explaining status
+3. In-game tutorial step for penalty mechanics
+
+**Acceptance Criteria:**
+- User can visually distinguish penalty states
+- Tooltip appears within 500ms of hover
+- Tutorial completion rate >80%
+
+**Business Impact:** MEDIUM - Reduces support burden, improves rule comprehension.
+
+---
+
+### 9. Deck Size Indicator Overlooked
+**Timestamp:** 9:34 - 9:40  
+**Severity:** LOW  
+**Impact:** Information discoverability
+
+**Evidence:**
+- "Ach, hier wird auch angezeigt, wie viele Karten noch im Stapel sind. Das habe ich vorher noch nicht gesehen."
+
+**Current State:** Deck size shown but not prominent.
+
+**Proposed Solution:**
+- Initial game: brief highlight animation on deck size (first 5 seconds)
+- Increase font size by 20%
+- Add icon (e.g., stack icon) next to number
+
+**Acceptance Criteria:**
+- 80% of new users notice deck size within first game
+- Information remains subtle, not distracting
+
+**Business Impact:** LOW - Nice-to-have, improves strategic awareness.
+
+---
+
+## POSITIVE VALIDATION (Features Working Well)
+
+### ✅ Avatar System - Highly Successful
+**Evidence:**
+- "That's me. Oh, ich spiele mit Titus, Robert und Hans. Cool. Das ist ja geil. Gefällt mir schon mal." (1:10-1:18)
+- "Der ist richtig gut getroffen. Voll. Der sieht aus wie Ole." (11:24-11:28)
+- "Oh die ist aber nett." (0:58) - referring to own avatar
+
+**Impact:** Strong emotional connection, personalization increases engagement.
+
+**Recommendation:** KEEP - This is a key differentiator. Consider expanding avatar library.
+
+---
+
+### ✅ Avatar Hover Zoom - Delightful Easter Egg
+**Evidence:**
+- "Es gibt ein Easter Egg. Wenn du länger auf den Avataren bleibst. Oh. Geil." (11:31-11:36)
+
+**Impact:** Adds polish, creates memorable moments.
+
+**Recommendation:** KEEP - Consider adding more subtle easter eggs for long-term engagement.
+
+---
+
+### ✅ Rule Explanation System (§ Button) - Excellent Learning Aid
+**Evidence:**
+- "Hier kann ich den Paragraph dazu nachlesen, warum ich eine Strafkarte gekriegt habe." (7:24-7:28)
+- "Es ist sogar hier angezeigt. [...] Der Zug wurde vorzeitig beendet. Es fehlt noch eine Aktion. Geil. Stark." (7:29-7:39)
+
+**Impact:** Reduces frustration from rule violations, educational value.
+
+**Recommendation:** KEEP & EXPAND - Add more rule explanations for edge cases.
+
+---
+
+### ✅ Game Log - Useful Reference
+**Evidence:**
+- "Okay, hier steht jetzt alles, was gespielt ist." (1:52)
+- "Weil jetzt muss ich hier noch mal nachgucken. Hat zwei Karten gezogen." (6:39-6:43)
+
+**Impact:** Allows players to review history, especially useful when AI speed high.
+
+**Recommendation:** KEEP - Consider adding filters (e.g., "Show only my actions").
+
+---
+
+### ✅ Auto-Restart After Win - Smooth Experience
+**Evidence:**
+- "Jetzt startet das Spiel einfach mal eine neue Partie. Geil. Ist ja mega. Richtig cool." (3:34-3:46)
+
+**Impact:** Reduces friction for multiple games, encourages continued play.
+
+**Recommendation:** KEEP - Add option to "Review Game Stats" before auto-restart.
+
+---
+
+## TECHNICAL DEBT & STABILITY ISSUES
+
+### Tab Switch Causes Issues
+**Timestamp:** 10:54 - 11:05  
+**Evidence:** "Hast du nur den Tab gewechselt, glaube ich. Du hast es kaputt gemacht."
+
+**Root Cause:** Likely state management issue when browser tab loses focus.
+
+**Recommendation:** 
+- Add visibility change event handler
+- Pause game when tab inactive
+- Resume with clear state when tab regains focus
+
+---
+
+### Inconsistent Status Display
+**Timestamp:** 7:11 - 7:17  
+**Evidence:** "Also manchmal steht hier was und manchmal nicht. So Sachen, die wahrscheinlich bleiben."
+
+**Issue:** Status area sometimes empty, unclear when effects persist.
+
+**Recommendation:**
+- Always show at least "Normaler Zug" when no special rules active
+- Use placeholder to maintain visual consistency
+
+---
+
+## FEATURE REQUESTS & FUTURE CONSIDERATIONS
+
+### 1. Multi-Player Local Mode
+**Timestamp:** 9:09 - 9:12  
+**Evidence:** "Können wir das auch nutzen? Zweit spielen?"
+
+**Priority:** P3 (Future)  
+**Rationale:** Low complexity, high value for social play scenarios.
+
+---
+
+### 2. Localization Check: "Pik" vs. "Pique"
+**Timestamp:** 10:41 - 10:47  
+**Evidence:** "Jetzt würde ich auch noch mal nachgucken, ob das nicht französisch geschrieben wird."
+
+**Priority:** P2  
+**Action:** Verify German vs. Swiss German conventions for suit names.
+
+---
+
+## CLUSTERED RECOMMENDATIONS BY THEME
+
+### CLUSTER A: Game Logic Integrity
+**Priority:** P0 - Sprint 1
+- Fix premature win condition (bug #1)
+- Fix initial card effect (bug #2)
+- Fix game hang (bug #3)
+- Add comprehensive end-to-end tests for these scenarios
+
+**Estimated Effort:** 8-13 story points
+
+---
+
+### CLUSTER B: Turn Clarity & Pacing
+**Priority:** P1 - Sprint 2
+- Add "Your Turn" indicator (issue #5)
+- Implement AI speed control (issue #6)
+- Update card naming convention (issue #4)
+
+**Estimated Effort:** 5-8 story points
+
+---
+
+### CLUSTER C: Information Architecture
+**Priority:** P2 - Sprint 3
+- Prominent penalty counter (issue #7)
+- Clearer penalty card states (issue #8)
+- Status area consistency (tech debt)
+- Deck size visibility (issue #9)
+
+**Estimated Effort:** 5-8 story points
+
+---
+
+### CLUSTER D: Polish & Stability
+**Priority:** P2/P3 - Sprint 4
+- Tab switch handling
+- Additional rule explanations
+- Multi-player mode exploration
+- Localization verification
+
+**Estimated Effort:** 8-13 story points
+
+---
+
+## SUCCESS METRICS & VALIDATION
+
+**Before Next User Test:**
+1. ✅ All P0 bugs fixed and tested
+2. ✅ "Your Turn" indicator implemented
+3. ✅ AI speed control with default 2s delay
+4. ✅ Card naming convention updated
+
+**Validation Criteria:**
+- No game-breaking bugs encountered in 30-minute session
+- User correctly identifies whose turn it is within 2 seconds
+- User can follow AI actions without referring to game log
+- User uses correct card terminology in think-aloud
+
+**Target Metrics:**
+- Session completion rate: 95%+ (no forced abandonment)
+- Average confusion moments: <3 per session
+- Post-test satisfaction: 7/10 or higher
+- Willingness to recommend: 8/10 or higher
+
+---
+
+## DEVELOPER NOTES
+
+**Testing Strategy:**
+- Add unit tests for win condition with penalty cards
+- Add integration test for initial card effects (all 13 ranks)
+- Add end-to-end test for common sequences that previously hung
+- Consider fuzzy testing for turn state machine
+
+**Code Quality:**
+- Review state machine logic - seems brittle with edge cases
+- Consider refactoring turn resolution into discrete, testable phases
+- Add debug mode that logs state transitions
+
+**Documentation:**
+- Document Swiss Mau-Mau rules as implemented
+- Create decision log for rule ambiguities
+- Add ADR (Architecture Decision Record) for state management approach
+
+---
+
+## CONCLUSION
+
+**Current State:** Beta quality with strong foundation but critical bugs.
+
+**Path to Production:**
+1. **Week 1-2:** Fix all P0 bugs, add tests
+2. **Week 3:** Implement P1 UX improvements
+3. **Week 4:** User testing round 2, iterate
+4. **Week 5+:** Polish, P2/P3 features based on validated learnings
+
+**Recommendation:** DO NOT LAUNCH until P0 bugs resolved. The positive feedback on avatars and rule explanations validates the product vision, but game integrity must be rock-solid for card game enthusiasts.
+
+**Next Steps:**
+1. Create JIRA tickets for all P0 and P1 issues
+2. Prioritize sprint 1 backlog
+3. Schedule follow-up test with User1 after fixes
+4. Recruit 2-3 additional testers (diverse skill levels)
+
+---
+
+**Analysis completed by:** Product Owner
+**Date:** 12. Februar 2026
+**Version:** Mau-Mau v0.4.2
