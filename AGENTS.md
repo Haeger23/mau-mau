@@ -54,3 +54,36 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Testing
+
+### Unit Tests — Vitest
+- Runner: **Vitest** (`vitest`) with `jsdom` environment
+- Coverage: **`@vitest/coverage-v8`** (run via `ng test`)
+- Test files follow the `*.spec.ts` convention next to the source file
+- Run all unit tests: `npm test`
+
+### End-to-End Tests — Playwright
+- Runner: **Playwright** (`@playwright/test`) — tests live in `e2e/`
+- Browser: Chromium (Desktop Chrome)
+- Accessibility assertions use **`@axe-core/playwright`**
+- The dev server (`npm start`) is auto-started by Playwright if not already running
+- Reports: HTML report (`playwright-report/`) + JUnit XML (`test-results/junit.xml`)
+- Run E2E tests: `npx playwright test`
+
+### Linting — ESLint
+- Flat config (`eslint.config.js`) with `typescript-eslint` + `angular-eslint`
+- Template accessibility rules enabled via `@angular-eslint/template/accessibility`
+- Run lint: `npm run lint`
+- Auto-fix: `npm run lint:fix`
+
+## Available npm Scripts
+
+| Script | Description |
+|---|---|
+| `npm start` | Start Angular dev server (`ng serve`) at `http://localhost:4200/mau-mau` |
+| `npm run build` | Production build |
+| `npm test` | Run unit tests via Vitest |
+| `npm run lint` | Run ESLint across all TS and HTML files |
+| `npm run lint:fix` | Run ESLint and auto-fix fixable issues |
+| `npx playwright test` | Run E2E tests with Playwright |
