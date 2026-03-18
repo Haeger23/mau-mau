@@ -8,19 +8,6 @@
             aria-label="Spiel beenden">✕</button>
   </div>
 
-  <!-- Bestätigungsdialog -->
-  @if (showExitConfirmation()) {
-    <div class="confirmation-overlay" (click)="showExitConfirmation.set(false)" (keydown.escape)="showExitConfirmation.set(false)" role="dialog" aria-modal="true">
-      <div class="confirmation-dialog" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
-        <h3>Spiel beenden?</h3>
-        <p>Möchtest du die aktuelle Partie wirklich beenden und zum Startbildschirm zurückkehren?</p>
-        <div class="confirmation-buttons">
-          <button class="confirm-btn cancel" (click)="showExitConfirmation.set(false)">Abbrechen</button>
-          <button class="confirm-btn confirm" (click)="backToStart()">Beenden</button>
-        </div>
-      </div>
-    </div>
-  }
 
   @if (gameState()) {
     <!-- Game Area Container with fixed height -->
@@ -265,12 +252,6 @@
         </div>
       }
 
-      <!-- Suit Selector -->
-      <app-suit-selector
-        [show]="showSuitSelector()"
-        (suitSelected)="onSuitSelected($event)">
-      </app-suit-selector>
-      
       </div>
       
       <!-- Chat Log -->

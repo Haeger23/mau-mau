@@ -68,7 +68,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
    - `src/app/app.html` → `<footer class="version">vX.Y.Z</footer>`
 4. If unsure which increment to use, ASK the user before committing
 
-**Current Version:** 0.1.0
+**Current Version:** 0.5.0
 
 ## Branch Protection
 

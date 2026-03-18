@@ -1,23 +1,23 @@
 import { Component, computed, signal, effect, input, output, inject, ChangeDetectionStrategy } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { GameService } from '../../services/game.service';
 import { CardComponent } from '../card/card.component';
-import { SuitSelectorComponent } from '../suit-selector/suit-selector.component';
+import { SuitSelectorDialogComponent } from '../suit-selector/suit-selector-dialog.component';
+import { ExitConfirmationDialogComponent } from '../exit-confirmation-dialog/exit-confirmation-dialog.component';
 import { Card, Suit } from '../../models/card.model';
 import { GameSetup } from '../start-screen/start-screen.component';
 import { ChatMessage } from '../../models/game-state.model';
 
 @Component({
   selector: 'app-game-board',
-  imports: [CardComponent, SuitSelectorComponent],
+  imports: [CardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './game-board.component.html',
   styleUrl: './game-board.component.scss'
 })
 export class GameBoardComponent {
   protected selectedCard = signal<Card | null>(null);
-  protected showSuitSelector = signal<boolean>(false);
   protected showWinOverlay = signal<boolean>(true);
-  protected showExitConfirmation = signal<boolean>(false);
   protected hoverAvatarUrl = signal<string | null>(null);
   protected hoverAvatarPosition = signal<{ x: number, y: number } | null>(null);
   private hoverTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -29,8 +29,9 @@ export class GameBoardComponent {
   humanPlayer;
   opponentPlayers;
   topCard;
-  
+
   private gameService = inject(GameService);
+  private dialog = inject(MatDialog);
 
   constructor() {
     this.gameState = this.gameService.state;
@@ -103,16 +104,17 @@ export class GameBoardComponent {
     
     this.gameService.startNewGame(playerNames);
     this.selectedCard.set(null);
-    this.showSuitSelector.set(false);
     this.showWinOverlay.set(true);
   }
 
   confirmBackToStart(): void {
-    this.showExitConfirmation.set(true);
+    const ref = this.dialog.open(ExitConfirmationDialogComponent);
+    ref.afterClosed().subscribe(confirmed => {
+      if (confirmed) this.returnToStart.emit();
+    });
   }
 
   backToStart(): void {
-    this.showExitConfirmation.set(false);
     this.returnToStart.emit();
   }
 
@@ -162,7 +164,10 @@ export class GameBoardComponent {
     // Show suit selector if Jack was played
     if (card.rank === 'J') {
       setTimeout(() => {
-        this.showSuitSelector.set(true);
+        const ref = this.dialog.open(SuitSelectorDialogComponent, { disableClose: true });
+        ref.afterClosed().subscribe((suit: Suit) => {
+          if (suit) this.gameService.chooseSuit(suit);
+        });
       }, 300);
     }
   }
@@ -227,12 +232,7 @@ export class GameBoardComponent {
     msg.showExplanation = !msg.showExplanation;
   }
 
-  onSuitSelected(suit: Suit): void {
-    this.showSuitSelector.set(false);
-    this.gameService.chooseSuit(suit);
-  }
-
-  formatTime(date: Date): string {
+formatTime(date: Date): string {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const seconds = date.getSeconds().toString().padStart(2, '0');
