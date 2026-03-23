@@ -372,9 +372,9 @@ export interface GameSetup {
     }
 
     .opponent-btn.selected {
-      background: #ff0000;
+      background: #c50000;
       color: white;
-      border-color: #ff0000;
+      border-color: #c50000;
     }
 
     .start-btn {
@@ -415,7 +415,7 @@ export interface GameSetup {
       display: inline-flex;
       align-items: center;
       gap: 0.667em; /* 8px */
-      color: #ff0000;
+      color: #c50000;
       text-decoration: none;
       font-size: 1.25em; /* 15px */
       font-weight: 500;

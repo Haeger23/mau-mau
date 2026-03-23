@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-exit-confirmation-dialog',
@@ -12,8 +12,8 @@ import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
       <p>Möchtest du die aktuelle Partie wirklich beenden und zum Startbildschirm zurückkehren?</p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-stroked-button [mat-dialog-close]="false">Abbrechen</button>
-      <button mat-flat-button color="warn" [mat-dialog-close]="true">Beenden</button>
+      <button mat-stroked-button class="confirm-btn cancel" [mat-dialog-close]="false">Abbrechen</button>
+      <button mat-flat-button color="warn" class="confirm-btn confirm" [mat-dialog-close]="true">Beenden</button>
     </mat-dialog-actions>
   `,
   styles: [`

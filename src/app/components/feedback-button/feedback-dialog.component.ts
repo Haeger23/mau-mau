@@ -26,8 +26,9 @@ import { version } from '../../../../package.json';
 
     <mat-dialog-content>
       <div class="field">
-        <label class="field-label">Typ</label>
+        <label class="field-label" for="feedback-type-select">Typ</label>
         <mat-button-toggle-group
+          id="feedback-type-select"
           data-testid="feedback-type-select"
           [value]="feedbackType()"
           (change)="feedbackType.set($event.value)"

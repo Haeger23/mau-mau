@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { Suit } from '../../models/card.model';
@@ -78,14 +78,14 @@ import { Suit } from '../../models/card.model';
   `]
 })
 export class SuitSelectorDialogComponent {
+  private readonly dialogRef = inject(MatDialogRef<SuitSelectorDialogComponent>);
+
   readonly suits = [
     { value: 'hearts' as Suit, symbol: '♥', name: 'Herz' },
     { value: 'diamonds' as Suit, symbol: '♦', name: 'Karo' },
     { value: 'clubs' as Suit, symbol: '♣', name: 'Kreuz' },
     { value: 'spades' as Suit, symbol: '♠', name: 'Pik' }
   ];
-
-  constructor(private dialogRef: MatDialogRef<SuitSelectorDialogComponent>) {}
 
   select(suit: Suit): void {
     this.dialogRef.close(suit);

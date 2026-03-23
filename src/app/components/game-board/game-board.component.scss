@@ -451,10 +451,14 @@ h1 {
   transition: all 0.3s ease;
 
   &.active {
-    background: #4CAF50;
+    background: #2e7d32;
     color: white;
     transform: scale(1.05);
-    box-shadow: 0 0.333em 1em rgba(76, 175, 80, 0.5); /* 0 4px 12px */
+    box-shadow: 0 0.333em 1em rgba(46, 125, 50, 0.5); /* 0 4px 12px */
+
+    .card-count {
+      opacity: 1;
+    }
   }
 }
 
@@ -815,7 +819,7 @@ h1 {
   }
 
   &.mau-btn {
-    background: #4caf50;
+    background: #2e7d32;
     color: white;
   }
 
@@ -835,7 +839,7 @@ h1 {
   }
 
   &.end-turn-btn {
-    background: #ff9800;
+    background: #bf360c;
     color: white;
     font-size: 1.167em; /* 14px */
     padding: 0.667em 1.667em; /* 8px 20px */

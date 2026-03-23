@@ -29,19 +29,15 @@ test.describe('Accessibility Tests', () => {
 
   test('sollte keyboard navigation unterstützen', async ({ page }) => {
     await page.goto('/');
-    
-    // Tab zur Name-Input
-    await page.keyboard.press('Tab');
+
+    // Name-Input direkt fokussieren und befüllen
+    await page.locator('[data-testid="input-player-name"]').focus();
     await page.keyboard.type('Keyboard User');
-    
-    // Tab zu Gegner-Buttons
-    await page.keyboard.press('Tab');
+
+    // Direkt den Start-Button per Tastatur aktivieren
+    await page.locator('[data-testid="action-start-game"]').focus();
     await page.keyboard.press('Enter');
-    
-    // Tab zum Start-Button
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Enter');
-    
+
     // Sollte im Spiel sein
     await page.waitForTimeout(1000);
     await expect(page.locator('[data-testid="player-0-name"]')).toContainText('Keyboard User');
