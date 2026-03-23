@@ -2,10 +2,11 @@ import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { GameBoardComponent } from './components/game-board/game-board.component';
 import { StartScreenComponent, GameSetup } from './components/start-screen/start-screen.component';
+import { FeedbackButtonComponent } from './components/feedback-button/feedback-button.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, GameBoardComponent, StartScreenComponent],
+  imports: [RouterOutlet, GameBoardComponent, StartScreenComponent, FeedbackButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.html',
   styleUrl: './app.scss'

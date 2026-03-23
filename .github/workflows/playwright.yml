@@ -1,9 +1,9 @@
 name: CI/CD - Tests & Build
 on:
   push:
-    branches: [ main, master, mau-mau-schweiz ]
+    branches: [ main, master, mau-mau-schweiz, development ]
   pull_request:
-    branches: [ main, master, mau-mau-schweiz ]
+    branches: [ main, master, mau-mau-schweiz, development ]
 
 jobs:
   unit-tests:

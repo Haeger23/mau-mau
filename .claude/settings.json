@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:fix)",
+      "Bash(npm run watch)",
+      "Bash(npm start)",
+      "Bash(npm test)",
+      "Bash(npm test -- *)",
+      "Bash(npx playwright test)",
+      "Bash(npx playwright test *)",
+      "Bash(./run-tests.sh)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add *)",
+      "Bash(git commit*)",
+      "Bash(git checkout *)",
+      "Bash(git branch*)",
+      "Bash(git push)",
+      "Bash(git push -u origin *)",
+      "Bash(ls*)",
+      "Bash(ls -la*)",
+      "Bash(pwd)",
+      "Bash(echo *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(mkdir *)",
+      "Bash(cd *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(node *)",
+      "Bash(which *)",
+      "Bash(open *)"
+    ]
+  }
+}

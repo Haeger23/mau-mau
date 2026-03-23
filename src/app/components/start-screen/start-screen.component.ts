@@ -1,6 +1,8 @@
-import { Component, output, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, output, signal, computed, ChangeDetectionStrategy, inject, afterNextRender } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { GameService } from '../../services/game.service';
+import { MobileWarningDialogComponent } from './mobile-warning-dialog.component';
 
 export interface GameSetup {
   playerName: string;
@@ -370,9 +372,9 @@ export interface GameSetup {
     }
 
     .opponent-btn.selected {
-      background: #ff0000;
+      background: #c50000;
       color: white;
-      border-color: #ff0000;
+      border-color: #c50000;
     }
 
     .start-btn {
@@ -413,7 +415,7 @@ export interface GameSetup {
       display: inline-flex;
       align-items: center;
       gap: 0.667em; /* 8px */
-      color: #ff0000;
+      color: #c50000;
       text-decoration: none;
       font-size: 1.25em; /* 15px */
       font-weight: 500;
@@ -467,14 +469,15 @@ export interface GameSetup {
 })
 export class StartScreenComponent {
   private gameService = inject(GameService);
-  
+  private dialog = inject(MatDialog);
+
   playerName = signal<string>('');
   opponentCount = signal<number>(3);
   opponentOptions = [1, 2, 3, 4];
-  
+
   showSuggestions = signal<boolean>(false);
   selectedIndex = signal<number>(-1);
-  
+
   availableNames = this.gameService.getAvailablePlayerNames();
 
   constructor() {
@@ -482,6 +485,12 @@ export class StartScreenComponent {
     this.availableNames.forEach(player => {
       const img = new Image();
       img.src = player.image;
+    });
+
+    afterNextRender(() => {
+      if (window.innerWidth < 768) {
+        this.dialog.open(MobileWarningDialogComponent, { maxWidth: '90vw' });
+      }
     });
   }
   

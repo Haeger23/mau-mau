@@ -1,6 +1,6 @@
 {
   "name": "mau-mau",
-  "version": "0.5.0",
+  "version": "0.6.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
