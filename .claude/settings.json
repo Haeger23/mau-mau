@@ -31,6 +31,7 @@
       "Bash(grep *)",
       "Bash(find *)",
       "Bash(mkdir *)",
+      "Bash(cd *)",
       "Bash(cp *)",
       "Bash(mv *)",
       "Bash(node *)",
