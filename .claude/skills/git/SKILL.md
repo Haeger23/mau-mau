@@ -35,7 +35,7 @@ Git expert for the mau-mau project. Parse `$ARGUMENTS` using the intent table be
 1. **NEVER force-push** to any branch
 2. **NEVER push directly to `main`** — `main` is PR-only. If current branch is `main` and user requests push: stop, output "main is PR-only — open a PR on GitHub instead."
 3. **New branches** are created from the currently checked-out branch
-4. **Version bump** is required before every push (except to `main`) and before every merge
+4. **Version bump** only happens when explicitly requested via `-patch`, `-minor`, or `-major` flag — never automatically
 5. **Undo** always uses `git reset HEAD~1` (soft) — never `--hard` without double confirmation
 6. **Destructive operations** (hard reset, `branch -D`, `push --force`, `clean -f`): briefly explain what will be lost, ask "Fortfahren? (ja/nein)", wait for explicit "ja" before proceeding
 
@@ -101,8 +101,7 @@ Only run VERSION BUMP sub-routine first if `$ARGUMENTS` contains `-patch`, `-min
 3. Run `git status --porcelain` — if uncommitted changes: stop: "Es gibt uncommittete Änderungen. Erst committen oder stashen."
 4. Run `git fetch origin`
 5. Run `git checkout <target>` then `git pull origin <target>`
-6. **VERSION BUMP sub-routine** (ask for patch/minor/major)
-7. Run `git merge --no-ff <source> -m "Merge branch '<source>' into <target>"`
+6. Run `git merge --no-ff <source> -m "Merge branch '<source>' into <target>"`
 8. If merge conflicts: list conflicting files, output "Bitte Konflikte lösen, dann `git merge --continue` ausführen." and stop
 9. Report success
 
@@ -114,8 +113,7 @@ Only run VERSION BUMP sub-routine first if `$ARGUMENTS` contains `-patch`, `-min
 2. **Safety: branch is `main`** → stop: "main ist PR-only — öffne einen PR auf GitHub statt direkt zu pushen."
 3. Run `git status --porcelain` — if uncommitted changes: warn "Es gibt uncommittete Änderungen die nicht gepusht werden."
 4. Run `git log origin/<branch>..HEAD --oneline 2>/dev/null || git log HEAD --oneline -5` — if nothing to push: output "Nichts zu pushen." and stop
-5. **VERSION BUMP sub-routine** (ask for patch/minor/major)
-6. Run `git push origin <branch>` (add `-u` if no upstream set)
+5. Run `git push origin <branch>` (add `-u` if no upstream set)
 7. If push rejected: output "Push abgelehnt. Führe `/git sync` aus und versuche es erneut." and stop
 8. Report success
 
