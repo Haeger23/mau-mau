@@ -86,6 +86,7 @@ export class GameService implements AIGameActions {
 
   getAvailablePlayerNames(): Array<{name: string, image: string}> {
     return [
+      { name: 'Fischi', image: 'images/players/fischi.webp' },
       { name: 'Hans', image: 'images/players/hans.webp' },
       { name: 'Lina', image: 'images/players/lina.webp' },
       { name: 'Lukas', image: 'images/players/lukas.webp' },
