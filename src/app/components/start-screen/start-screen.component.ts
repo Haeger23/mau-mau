@@ -18,7 +18,7 @@ export interface GameSetup {
       <!-- Hero Section with Logo -->
       <header class="hero-section">
         <h1 class="logo-container">
-          <img src="/mau-mau-logo.svg" alt="" role="presentation" class="logo">
+          <img src="mau-mau-logo.svg" alt="" role="presentation" class="logo">
           <span class="sr-only">Mau-Mau</span>
         </h1>
         <p class="tagline">Die in der Schweiz typische Spielart <br />auf einhundert</p>
