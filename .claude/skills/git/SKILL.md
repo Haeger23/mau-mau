@@ -17,8 +17,8 @@ Git expert for the mau-mau project. Parse `$ARGUMENTS` using the intent table be
 
 | User says | Action |
 |-----------|--------|
-| "commit" / "committe" | → COMMIT workflow |
-| "commit -patch" / "commit -minor" / "commit -major" | → VERSION BUMP, then COMMIT workflow |
+| "commit" / "committe" | → COMMIT workflow (no version bump) |
+| "commit -patch" / "commit -minor" / "commit -major" | → VERSION BUMP sub-routine, then COMMIT workflow |
 | "branch <name>" / "erstelle branch <name>" / "neuer branch <name>" | → BRANCH workflow |
 | "merge <source>" / "merge <source> into <target>" | → MERGE workflow |
 | "push" / "pushe" / "push to <branch>" | → PUSH workflow |
@@ -60,6 +60,8 @@ Call this sub-routine whenever triggered (see each workflow).
 ---
 
 ## COMMIT workflow
+
+Only run VERSION BUMP sub-routine first if `$ARGUMENTS` contains `-patch`, `-minor`, or `-major`. Otherwise skip directly to step 1.
 
 1. Run `git status --porcelain` — if no staged files (no lines where first char is not space or `?`): output "Keine gestagten Files gefunden." and stop
 2. Run `git diff --cached` to review all staged changes
