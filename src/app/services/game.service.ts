@@ -86,16 +86,16 @@ export class GameService implements AIGameActions {
 
   getAvailablePlayerNames(): Array<{name: string, image: string}> {
     return [
-      { name: 'Hans', image: '/images/players/hans.webp' },
-      { name: 'Lina', image: '/images/players/lina.webp' },
-      { name: 'Lukas', image: '/images/players/lukas.webp' },
-      { name: 'Manu', image: '/images/players/manuel.webp' },
-      { name: 'Max', image: '/images/players/max.webp' },
-      { name: 'Ole', image: '/images/players/ole.webp' },
-      { name: 'Robert', image: '/images/players/robert.webp' },
-      { name: 'Sebastian', image: '/images/players/sebastian.webp' },
-      { name: 'Titus', image: '/images/players/titus.webp' },
-      { name: 'Willi', image: '/images/players/willi.webp' }
+      { name: 'Hans', image: 'images/players/hans.webp' },
+      { name: 'Lina', image: 'images/players/lina.webp' },
+      { name: 'Lukas', image: 'images/players/lukas.webp' },
+      { name: 'Manu', image: 'images/players/manuel.webp' },
+      { name: 'Max', image: 'images/players/max.webp' },
+      { name: 'Ole', image: 'images/players/ole.webp' },
+      { name: 'Robert', image: 'images/players/robert.webp' },
+      { name: 'Sebastian', image: 'images/players/sebastian.webp' },
+      { name: 'Titus', image: 'images/players/titus.webp' },
+      { name: 'Willi', image: 'images/players/willi.webp' }
     ];
   }
 
