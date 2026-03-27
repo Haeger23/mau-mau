@@ -62,7 +62,10 @@ Follow SemVer: `PATCH` for fixes, `MINOR` for new features, `MAJOR` for breaking
 
 - `main` — protected, PRs only (never push directly)
 - `development` — integration branch, direct pushes allowed
-- Feature branches off `development`
+- Feature branches off `development`: `feat/`, `fix/`, `hotfix/`, `chore/`, `refactor/`, `docs/`, `test/`
+- Commit messages follow Conventional Commits: `feat(scope): description`
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full branch naming, commit format, and PR checklist.
 
 ## Key Docs
 
