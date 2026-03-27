@@ -77,6 +77,33 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Run lint: `npm run lint`
 - Auto-fix: `npm run lint:fix`
 
+## Git Conventions
+
+### Branch Naming
+
+`<type>/<short-description>` — lowercase, kebab-case, 2–5 words.
+
+Types: `feat/`, `fix/`, `hotfix/`, `chore/`, `refactor/`, `docs/`, `test/`
+
+Examples: `feat/queen-round-animation`, `fix/seven-card-chain-counter`
+
+### Commit Messages
+
+Follow Conventional Commits: `<type>(<scope>): <short description>`
+
+Types: `feat`, `fix`, `chore`, `refactor`, `test`, `docs`, `style`, `perf`
+
+Scopes: `game`, `rules`, `ai`, `ui`, `a11y`, `pwa`, `deps`, `ci`
+
+Examples:
+- `feat(rules): add chaining logic for seven card`
+- `fix(ai): prevent AI from playing Jack on Jack`
+- `test(game): add seeded test for full game round`
+
+Rules: present tense imperative, lowercase, no trailing period, subject ≤ 72 chars.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide including branch strategy and PR checklist.
+
 ## Available npm Scripts
 
 | Script | Description |
