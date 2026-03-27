@@ -52,11 +52,7 @@ Players must announce "Mau" on their second-to-last card and "Mau-Mau" when play
 
 ## Version Bumping
 
-**Before every push to `development`**, bump the version in **two** places:
-1. `package.json` → `"version"` field
-2. `src/app/app.html` → `<footer class="version">vX.Y.Z</footer>`
-
-Follow SemVer: `PATCH` for fixes, `MINOR` for new features, `MAJOR` for breaking changes. If unsure, ask before committing. Use the `/commit-staged` skill — it handles the bump automatically with `-patch`, `-minor`, or `-major` flags.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full version bump procedure.
 
 ## Branch Strategy
 
@@ -71,5 +67,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full branch naming, commit format
 
 - [AGENTS.md](AGENTS.md) — coding conventions & style guide (read this first)
 - [docs/TURN_FLOW.md](docs/TURN_FLOW.md) — state machine diagram, AI turn logic, race condition guards
-- [VERSIONING.md](VERSIONING.md) — SemVer guide
 - [MATERIAL_DESIGN_3.md](MATERIAL_DESIGN_3.md) — MD3 theming system

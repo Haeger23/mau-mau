@@ -94,18 +94,19 @@ See [.github/BRANCH_PROTECTION.md](.github/BRANCH_PROTECTION.md) for GitHub bran
 
 - [ ] `npm test` passes
 - [ ] `npm run lint` passes
-- [ ] Version bumped in `package.json` and `src/app/app.html` (see [VERSIONING.md](VERSIONING.md))
+- [ ] Version bumped in `package.json`, `src/app/app.html`, and `README.md` (PATCH / MINOR / MAJOR per SemVer)
 - [ ] No `console.log` left in production code
 - [ ] Accessibility: component passes AXE checks
 
 ## Version Bumping
 
-Bump the version **before every push to `development`** in two places:
+Bump the version **before every push to `development`** in three places:
 
 1. `package.json` → `"version"` field
 2. `src/app/app.html` → `<footer class="version">vX.Y.Z</footer>`
+3. `README.md` → `**Version:** X.Y.Z`
 
-Follow SemVer — when in doubt, see [VERSIONING.md](VERSIONING.md).
+Follow SemVer: `PATCH` for fixes, `MINOR` for new features, `MAJOR` for breaking changes.
 
 ## Local Setup
 
