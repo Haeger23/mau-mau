@@ -2,7 +2,7 @@
 
 A Swiss Mau-Mau card game built with Angular 21, implementing the official rules from [mau-mau.ch](https://mau-mau.ch). Supports 1–4 players (human + AI opponents) and runs as a PWA deployed at `/mau-mau`.
 
-**Version:** 0.7.0
+**Version:** 0.7.1
 
 ## Features
 
