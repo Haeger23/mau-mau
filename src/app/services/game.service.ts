@@ -94,6 +94,7 @@ export class GameService implements AIGameActions {
       { name: 'Ole', image: 'images/players/ole.webp' },
       { name: 'Robert', image: 'images/players/robert.webp' },
       { name: 'Sebastian', image: 'images/players/sebastian.webp' },
+      { name: 'Patrick', image: 'images/players/patrick.webp' },
       { name: 'Titus', image: 'images/players/titus.webp' },
       { name: 'Willi', image: 'images/players/willi.webp' }
     ];
