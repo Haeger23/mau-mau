@@ -42,6 +42,10 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
+# Player images (local only, not tracked in git)
+/images/
+!/images/.gitkeep
+
 # Playwright
 node_modules/
 /test-results/
