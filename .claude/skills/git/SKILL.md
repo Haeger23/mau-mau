@@ -54,8 +54,9 @@ Call this sub-routine whenever triggered (see each workflow).
    - `-major`: increment first, reset others (0.5.1 → 1.0.0)
 5. Edit `package.json`: update `"version"` field to new version string
 6. Edit `src/app/app.html`: find `<footer class="version">v…</footer>` and replace with `v<new-version>`
-7. Stage both: `git add package.json src/app/app.html`
-8. Commit: `git commit -m "chore: Bump version to <new-version>"`
+7. Edit `README.md`: find `**Version:** x.x.x` and replace with `**Version:** <new-version>`
+8. Stage all three: `git add package.json src/app/app.html README.md`
+9. Commit: `git commit -m "chore: Bump version to <new-version>"`
 
 ---
 
