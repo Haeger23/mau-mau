@@ -4,6 +4,12 @@
 
 This is a Swiss Mau-Mau card game built with Angular 21. It implements the official Swiss rules from mau-mau.ch, supports 1–4 players (human + AI opponents), and runs as a PWA deployed at `/mau-mau`.
 
+## Game Philosophy
+
+Mistakes are consistently penalized in this Mau-Mau variant. The UI intentionally does **not** prevent errors — buttons and actions remain available at all times, even when they would be rule-violating. This is by design: the possibility of making mistakes is a core part of the game experience.
+
+When a rule-violating action is triggered, penalty cards are distributed. The tone when doing so may be slightly sarcastic, but must always be grounded in a clear rule reference and explanation. It should never feel like a personal attack — the baseline tone remains professional and friendly.
+
 ## Key Architecture
 
 **Services (core logic):**
