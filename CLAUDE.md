@@ -42,6 +42,11 @@ See [AGENTS.md](AGENTS.md) for the full style guide. Key points:
 - Deterministic testing uses `SeededRandom` (LCG) — call `gameService.setSeed()` to control shuffle/AI
 - Test IDs follow `{component}-{element}` pattern (e.g. `card-hearts-7`)
 
+**Done checklist — required before any task is complete:**
+1. `npm test` passes (zero failures)
+2. New/changed code has a `.spec.ts` with meaningful tests
+3. `npx playwright test` passes if UI or game flow changed
+
 ## Swiss Mau-Mau Rules Summary
 
 | Card | Effect |
