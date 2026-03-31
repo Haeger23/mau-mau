@@ -18,7 +18,20 @@ export class RuleEngine {
   private rules: CardRule[];
 
   constructor() {
-    // The order is important. More specific rules should come before general ones.
+    // Rule chain order — order matters for applyAllEffects():
+    //
+    // SevenRule   — must come before DefaultRule; chains 7-penalty across players
+    // EightRule   — must come before DefaultRule; sets skipNext flag
+    // NineRule    — must come before DefaultRule; activates nineBase chain
+    // TenRule     — after number rules (7/8/9) so Ten can replicate them
+    // AceRule     — after number rules; sets activeAce (player stays active)
+    // JackRule    — after AceRule; sets awaitingSuitChoice
+    // QueenRule   — after all card-specific rules; enables queenRoundActive
+    // DefaultRule — ALWAYS last; handles normal suit/rank matching
+    //
+    // To add a new rule: insert it BEFORE DefaultRule. If it interacts with
+    // penalty state (drawPenalty), add it before TenRule. If it interacts with
+    // the Queen Round, add it before QueenRule.
     this.rules = [
       new SevenRule(),
       new EightRule(),
@@ -27,7 +40,7 @@ export class RuleEngine {
       new AceRule(),
       new JackRule(),
       new QueenRule(),
-      new DefaultRule(), // The default rule should always be last.
+      new DefaultRule(), // The default rule must always be last.
     ];
   }
 
@@ -88,7 +101,6 @@ export class RuleEngine {
 
     // Nach einem Buben: Nur Karten der gewählten Farbe
     if (state.chosenSuit) {
-      console.log(`[isCardPlayable] chosenSuit is ${state.chosenSuit}, card.suit is ${card.suit}`);
       return card.suit === state.chosenSuit;
     }
 

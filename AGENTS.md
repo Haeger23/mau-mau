@@ -65,6 +65,10 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - **Target ≥80% line coverage** on any file you create or modify. Check with `npm test -- --coverage`.
 - Always use `gameService.setSeed(12345)` (or any fixed seed) in tests involving game logic to ensure determinism.
 
+For AI behaviour tests, always call `gameService.setSeed(N)` before the scenario. With a fixed seed, AI card selection is deterministic and assertable.
+
+When adding a new card rule, add it before `DefaultRule` in `rule-engine.service.ts`. If it interacts with penalty or special-round state, add it before the relevant rule (e.g., before `QueenRule` for Queen Round interactions).
+
 ### Done Checklist — Before Marking Any Task Complete
 
 1. `npm test` passes with zero failures
@@ -91,6 +95,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Template accessibility rules enabled via `@angular-eslint/template/accessibility`
 - Run lint: `npm run lint`
 - Auto-fix: `npm run lint:fix`
+- Do not leave `console.log` in production code. Use `console.error` only for genuinely unexpected error states.
 
 ## Git Conventions
 

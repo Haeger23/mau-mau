@@ -53,7 +53,7 @@ See [AGENTS.md](AGENTS.md) for the full style guide. Key points:
 |------|--------|
 | 7 | Next player draws +2 (chains: 7 on 7 = +4, etc.) |
 | 8 | Next player is skipped |
-| 9 | Allows sequential same-suit plays |
+| 9 | Activates a "nine base": the same player may continue playing any number of additional cards of the same suit in the same turn. Effects of chained cards are applied only when the turn ends (top card only). The turn does not pass until the player ends it. |
 | 10 | Replicates the card below it |
 | Jack | Player chooses the new suit (no Jack-on-Jack) |
 | Queen | Triggers "Dame Round" — only Queens and 10s playable |
@@ -78,4 +78,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full branch naming, commit format
 
 - [AGENTS.md](AGENTS.md) — coding conventions & style guide (read this first)
 - [docs/TURN_FLOW.md](docs/TURN_FLOW.md) — state machine diagram, AI turn logic, race condition guards
+- [docs/COMPONENT_FLOW.md](docs/COMPONENT_FLOW.md) — signal-to-component data-flow reference
 - [MATERIAL_DESIGN_3.md](MATERIAL_DESIGN_3.md) — MD3 theming system

@@ -445,7 +445,6 @@ export class GameService implements AIGameActions {
   canPlayCard(card: Card): boolean {
     // Use the RuleEngine for card validation
     const state = this.gameState();
-    console.log(`[canPlayCard] Checking card ${card.rank} ${card.suit}, chosenSuit is: ${state.chosenSuit}`);
     return this.ruleEngine.isCardPlayable(card, state);
   }
 
@@ -714,7 +713,6 @@ export class GameService implements AIGameActions {
       // Für Menschen: Warte auf manuelles "Zug beenden"
       // Für KI: Automatisch endTurn() aufrufen (inkl. Penalty-/Gewinnprüfung)
       if (!currentPlayer.isHuman) {
-        console.log(`[playCard] AI ${currentPlayer.name} finished playing ${card.rank}, calling endTurn()`);
         this.endTurn();
       }
       // Menschlicher Spieler muss "Zug beenden" klicken
@@ -894,9 +892,7 @@ export class GameService implements AIGameActions {
     state.chosenSuit = suit;
     state.awaitingSuitChoice = false; // Farbwahl abgeschlossen
     state.turnPhase = 'SUIT_CHOSEN';
-    console.log(`[chooseSuit] Setting chosenSuit to: ${suit}`);
     this.gameState.set({ ...state });
-    console.log(`[chooseSuit] After set, chosenSuit is: ${this.gameState().chosenSuit}`);
     
     // Für Menschen: Warte auf manuelles "Zug beenden"
     // Für KI: Automatisch endTurn() (inkl. Penalty-/Gewinnprüfung)
@@ -1137,7 +1133,6 @@ export class GameService implements AIGameActions {
 
   private nextTurn(): void {
     const state = this.gameState();
-    console.log(`[nextTurn] Before nextTurn, chosenSuit is: ${state.chosenSuit}`);
 
     // Reset turn phase and lastPlayerAction for new turn
     state.turnPhase = 'WAITING_FOR_ACTION';
@@ -1170,7 +1165,6 @@ export class GameService implements AIGameActions {
     });
 
     this.gameState.set({ ...state });
-    console.log(`[nextTurn] After nextTurn, chosenSuit is: ${this.gameState().chosenSuit}`);
 
     // If next player is AI, play automatically after a delay
     const currentPlayer = state.players[state.currentPlayerIndex];

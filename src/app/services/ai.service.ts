@@ -58,11 +58,9 @@ export class AIService {
    */
   playTurn(state: GameState): void {
     const currentPlayer = state.players[state.currentPlayerIndex];
-    console.log(`[AIService.playTurn] Called for ${currentPlayer.name}, aiTurnInProgress=${this.aiTurnInProgress}, gameOver=${state.gameOver}`);
-    
+
     // Guard: Prevent simultaneous AI turns
     if (this.aiTurnInProgress) {
-      console.log(`[AIService.playTurn] BLOCKED - aiTurnInProgress is true`);
       return;
     }
     this.aiTurnInProgress = true;
