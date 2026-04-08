@@ -34,8 +34,8 @@ import { Card } from '../../models/card.model';
   `,
   styles: [`
     .card {
-      width: 10em; /* 120px */
-      height: 14em; /* 168px */
+      width: clamp(6em, 10vw, 10em);  /* 72–120px fluid */
+      height: clamp(8.4em, 14vw, 14em); /* 100–168px fluid */
       background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
       border-radius: 1em; /* 12px */
       position: relative;
@@ -77,6 +77,18 @@ import { Card } from '../../models/card.model';
 
     .card.clickable {
       cursor: pointer;
+      /* 3b: min Touch-Target via padding — clamp stellt sicher, dass Karten gross genug sind */
+    }
+
+    /* 3c: Hover-Effekt auf Touch-Geräten deaktivieren */
+    @media (hover: none) {
+      .card.clickable:hover {
+        transform: none;
+        box-shadow:
+          0 4px 8px rgba(0, 0, 0, 0.15),
+          0 2px 4px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      }
     }
 
     .card.clickable:hover {

@@ -2,21 +2,21 @@
   <!-- Header -->
   <div class="game-header">
     <img src="mau-mau-logo.svg" alt="Mau-Mau" class="header-logo">
-    <button class="back-btn" 
-            data-testid="action-back-to-start" 
+    <button class="back-btn"
+            data-testid="action-back-to-start"
             (click)="confirmBackToStart()"
             aria-label="Spiel beenden">✕</button>
   </div>
 
 
   @if (gameState()) {
-    <!-- Game Area Container with fixed height -->
+    <!-- Game Area Container -->
     <div class="game-container">
       <div class="game-area">
-        
+
         <!-- Main Game Area -->
         <div class="game-main">
-      
+
       <!-- Opponent Players -->
       <div class="opponents">
         @for (player of opponentPlayers(); track player.id; let idx = $index) {
@@ -24,9 +24,15 @@
             <div class="player-info" [class.active]="player.isActive">
               <div class="player-header">
                 @if (getPlayerAvatar(player.name); as avatar) {
-                  <div class="player-avatar-small" 
+                  <div class="player-avatar-small"
                        (mouseenter)="avatar.type === 'image' ? onAvatarHover(avatar.value, $event) : null"
-                       (mouseleave)="onAvatarHover(null)">
+                       (mouseleave)="onAvatarHover(null)"
+                       (click)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.enter)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.space)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       [attr.role]="avatar.type === 'image' ? 'button' : null"
+                       [attr.aria-label]="avatar.type === 'image' ? 'Avatar von ' + player.name + ' vergrössern' : null"
+                       [attr.tabindex]="avatar.type === 'image' ? 0 : null">
                     @if (avatar.type === 'image') {
                       <img [src]="avatar.value" [alt]="player.name" class="avatar-image">
                     } @else {
@@ -43,7 +49,7 @@
                 <div class="penalty-cards-display">
                   <div class="penalty-group locked-group" aria-label="Gesperrte Strafkarten">
                     @for (card of player.lockedPenaltyCards; track card.id; let i = $index) {
-                      <div class="card-back mini-penalty" 
+                      <div class="card-back mini-penalty"
                            [attr.aria-label]="'Gesperrte Strafkarte ' + (i + 1) + ' von ' + player.lockedPenaltyCards.length"></div>
                     }
                   </div>
@@ -52,7 +58,7 @@
                   }
                   <div class="penalty-group pickupable-group" aria-label="Aufnehmbare Strafkarten">
                     @for (card of player.pickupablePenaltyCards; track card.id; let i = $index) {
-                      <div class="card-back mini-penalty" 
+                      <div class="card-back mini-penalty"
                            [attr.aria-label]="'Aufnehmbare Strafkarte ' + (i + 1) + ' von ' + player.pickupablePenaltyCards.length"></div>
                     }
                   </div>
@@ -89,7 +95,7 @@
           }
           @if (gameState().chosenSuit) {
             <div class="status-message suit" data-testid="game-chosen-suit">
-              🎯 Gewählte Farbe: 
+              🎯 Gewählte Farbe:
               <span [style.color]="getSuitColor(gameState().chosenSuit!)">
                 {{ getSuitSymbol(gameState().chosenSuit!) }} {{ getSuitName(gameState().chosenSuit!) }}
               </span>
@@ -114,8 +120,8 @@
 
         <div class="discard-area">
           @if (topCard()) {
-            <app-card 
-              [card]="topCard()!" 
+            <app-card
+              [card]="topCard()!"
               [clickable]="false">
             </app-card>
           }
@@ -131,7 +137,13 @@
               @if (getPlayerAvatar(humanPlayer()!.name); as avatar) {
                 <div class="player-avatar-small"
                      (mouseenter)="avatar.type === 'image' ? onAvatarHover(avatar.value, $event) : null"
-                     (mouseleave)="onAvatarHover(null)">
+                     (mouseleave)="onAvatarHover(null)"
+                     (click)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                     (keydown.enter)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                     (keydown.space)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                     [attr.role]="avatar.type === 'image' ? 'button' : null"
+                     [attr.aria-label]="avatar.type === 'image' ? 'Mein Avatar vergrössern' : null"
+                     [attr.tabindex]="avatar.type === 'image' ? 0 : null">
                   @if (avatar.type === 'image') {
                     <img [src]="avatar.value" [alt]="humanPlayer()!.name" class="avatar-image">
                   } @else {
@@ -154,7 +166,7 @@
                 <span class="penalty-label">Strafkarten:</span>
                 <div class="penalty-group locked-group" aria-label="Gesperrte Strafkarten">
                   @for (card of humanPlayer()!.lockedPenaltyCards; track card.id; let i = $index) {
-                    <button class="card-back mini-penalty clickable" 
+                    <button class="card-back mini-penalty clickable"
                             type="button"
                             [attr.aria-label]="'Gesperrte Strafkarte ' + (i + 1) + ' von ' + humanPlayer()!.lockedPenaltyCards.length + ' - Klick gibt Strafe'"
                             [attr.data-testid]="'locked-penalty-' + i"
@@ -166,7 +178,7 @@
                 }
                 <div class="penalty-group pickupable-group" aria-label="Aufnehmbare Strafkarten">
                   @for (card of humanPlayer()!.pickupablePenaltyCards; track card.id; let i = $index) {
-                    <button class="card-back mini-penalty clickable" 
+                    <button class="card-back mini-penalty clickable"
                             type="button"
                             [attr.aria-label]="'Aufnehmbare Strafkarte ' + (i + 1) + ' von ' + humanPlayer()!.pickupablePenaltyCards.length"
                             [attr.data-testid]="'pickupable-penalty-' + i"
@@ -187,37 +199,37 @@
               }
             </div>
           </div>
-          
+
           <!-- Action Buttons -->
           @if (humanPlayer()!.isActive) {
             <div class="action-buttons">
-              <button 
+              <button
                 class="action-btn mau-btn"
                 data-testid="action-mau"
                 [disabled]="humanPlayer()!.hasSaidMau"
                 (click)="onSayMau()">
                 Mau!
               </button>
-              <button 
+              <button
                 class="action-btn maumau-btn"
                 data-testid="action-mau-mau"
                 [disabled]="humanPlayer()!.hasSaidMauMau"
                 (click)="onSayMauMau()">
                 Mau-Mau!
               </button>
-              <button 
+              <button
                 class="action-btn queen-btn"
                 data-testid="action-queen-round"
                 (click)="onAnnounceQueenRound()">
                 Damenrunde
               </button>
-              <button 
+              <button
                 class="action-btn queen-end-btn"
                 data-testid="action-end-queen-round"
                 (click)="onEndQueenRound()">
                 Damenrunde beenden
               </button>
-              <button 
+              <button
                 class="action-btn end-turn-btn"
                 data-testid="action-end-turn"
                 (click)="onEndTurn()">
@@ -225,7 +237,7 @@
               </button>
             </div>
           }
-          
+
           <div class="hand-cards">
             @for (card of humanPlayer()!.hand; track card.id) {
               <app-card
@@ -253,9 +265,20 @@
       }
 
       </div>
-      
-      <!-- Chat Log -->
-      <div class="chat-log">
+
+      <!-- Chat Log (Mobile: Bottom Sheet via toggle; Tablet+: immer sichtbar) -->
+      @if (chatVisible()) {
+        <div class="chat-backdrop" (click)="toggleChat()" aria-hidden="true"></div>
+      }
+      <button
+        class="chat-toggle-btn"
+        type="button"
+        aria-label="Spielverlauf anzeigen"
+        (click)="toggleChat()">
+        {{ chatVisible() ? '✕ Schliessen' : '💬 Verlauf' }}
+      </button>
+
+      <div class="chat-log" [class.chat-visible]="chatVisible()">
         <h3>Spielverlauf</h3>
         <div class="chat-messages">
           @for (msg of gameState().chatLog.slice().reverse(); track $index) {
@@ -265,7 +288,13 @@
                 @if (getPlayerAvatar(msg.playerName); as avatar) {
                   <div class="chat-player-avatar"
                        (mouseenter)="avatar.type === 'image' ? onAvatarHover(avatar.value, $event) : null"
-                       (mouseleave)="onAvatarHover(null)">
+                       (mouseleave)="onAvatarHover(null)"
+                       (click)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.enter)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.space)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       [attr.role]="avatar.type === 'image' ? 'button' : null"
+                       [attr.aria-label]="avatar.type === 'image' ? 'Avatar von ' + msg.playerName + ' vergrössern' : null"
+                       [attr.tabindex]="avatar.type === 'image' ? 0 : null">
                     @if (avatar.type === 'image') {
                       <img [src]="avatar.value" [alt]="msg.playerName" class="avatar-image">
                     } @else {
@@ -286,16 +315,35 @@
           }
         </div>
       </div>
-      
+
       </div><!-- end game-area -->
     </div><!-- end game-container -->
 
-    <!-- Avatar Zoom Overlay -->
+    <!-- Desktop: Hover-Zoom-Overlay -->
     @if (hoverAvatarUrl() && hoverAvatarPosition()) {
-      <div class="avatar-zoom-overlay" 
+      <div class="avatar-zoom-overlay"
            [style.left.px]="hoverAvatarPosition()!.x"
            [style.top.px]="hoverAvatarPosition()!.y">
         <img [src]="hoverAvatarUrl()!" alt="Zoomed avatar" class="zoomed-avatar">
+      </div>
+    }
+
+    <!-- Touch: Zentriertes Avatar-Modal (3a) -->
+    @if (avatarModalUrl()) {
+      <div class="avatar-modal-backdrop"
+           (click)="closeAvatarModal()"
+           (keydown.escape)="closeAvatarModal()"
+           role="dialog"
+           aria-modal="true"
+           aria-label="Avatar schliessen">
+        <div class="avatar-modal-content"
+             tabindex="-1"
+             (click)="$event.stopPropagation()"
+             (keydown.enter)="$event.stopPropagation()"
+             (keydown.space)="$event.stopPropagation()">
+          <img [src]="avatarModalUrl()!" alt="Avatar" class="avatar-modal-img">
+          <button class="avatar-modal-close" (click)="closeAvatarModal()" aria-label="Schliessen">✕</button>
+        </div>
       </div>
     }
 

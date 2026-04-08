@@ -140,7 +140,7 @@ h1 {
 .game-container {
   max-width: 133.333em; /* 1600px */
   margin: 0 auto;
-  height: calc(100vh - 8.333em); /* Viewport minus Header und Padding */
+  min-height: 100dvh; /* kein Clip-Effekt, Scroll bleibt möglich */
 }
 
 .game-area {
@@ -928,102 +928,256 @@ h1 {
   }
 }
 
-// ========== RESPONSIVE DESIGN ==========
-@media (max-width: 768px) {
-  .game-area {
-    flex-direction: column;
-  }
+// ========== RESPONSIVE DESIGN — Mobile-First ==========
 
-  .game-header {
-    margin-bottom: 1em;
-    margin-top: 0;
-  }
+// --- Mobile Base (< 600px) ---
 
-  .chat-log {
-    width: 100%;
-    max-height: 23.333em; /* 280px */
-    order: -1;
-  }
+// Layout: stacked column (overrides desktop grid at top of file)
+.game-area {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  align-items: stretch;
+}
 
-  .opponents {
-    flex-direction: column;
-    gap: 0.667em; /* 8px */
-  }
+.game-main {
+  height: auto;
+  overflow-y: visible;
+}
 
-  .center-area {
-    gap: 2.083em; /* 25px */
-    margin: 1.25em 0; /* 15px 0 */
-  }
+// Hand cards: horizontal scroll, no wrap (2d)
+.hand-cards {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  padding-bottom: 0.5em;
+  gap: 0.5em; /* 6px */
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 
-  .hand-cards {
-    gap: 0.5em; /* 6px */
+  &::-webkit-scrollbar {
+    height: 0.333em;
   }
-
-  .action-buttons {
-    gap: 0.5em; /* 6px */
-    
-    .action-btn {
-      font-size: 0.917em; /* 11px */
-      padding: 0.417em 0.833em; /* 5px 10px */
-    }
-  }
-
-  h1 {
-    font-size: 1.5em;
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 0.333em;
   }
 }
 
-@media (max-width: 480px) {
+// Action buttons: sticky at bottom on mobile (2e)
+.action-buttons {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: rgba(76, 0, 0, 0.9);
+  backdrop-filter: blur(4px);
+  padding: 0.667em; /* 8px */
+  margin: 0 -1em -1em; /* bleed to player-hand edges */
+  gap: 0.5em;
+  flex-wrap: wrap;
+
+  .action-btn {
+    min-height: 2.917em; /* 35px → 44px touch target at 15px base */
+    font-size: 0.917em;
+    padding: 0.5em 0.833em;
+  }
+}
+
+// Chat log: hidden on mobile, revealed as bottom sheet (2f)
+.chat-log {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+  max-height: 65dvh;
+  border-radius: 1em 1em 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 200;
+  order: unset;
+
+  &.chat-visible {
+    transform: translateY(0);
+  }
+}
+
+// Chat toggle button: only on mobile
+.chat-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+  z-index: 201;
+  background: rgba(255, 255, 255, 0.95);
+  color: #ff0000;
+  border: 0.167em solid #ff0000;
+  border-radius: 2em;
+  padding: 0.667em 1.333em;
+  font-size: 1em;
+  font-weight: bold;
+  box-shadow: 0 0.333em 1em rgba(0, 0, 0, 0.3);
+  min-height: 2.917em; /* 44px touch target */
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #ff0000;
+    color: white;
+  }
+}
+
+// Chat backdrop overlay
+.chat-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 199;
+}
+
+// Game header on mobile
+.game-header {
+  margin-bottom: 0.667em;
+  margin-top: 0;
+}
+
+.game-board {
+  padding: 0.667em; /* 8px on mobile */
+}
+
+// Opponents: column on small screens
+.opponents {
+  flex-direction: column;
+  gap: 0.667em;
+}
+
+// Center area: tighter on mobile
+.center-area {
+  gap: 1.5em;
+  margin: 1em 0;
+
+  .card-back.stack {
+    width: 6.25em; /* 75px */
+    height: 8.75em; /* 105px */
+  }
+}
+
+.status-message {
+  font-size: 1em;
+  padding: 0.667em 1.333em;
+}
+
+.chat-message {
+  font-size: 0.917em;
+  padding: 0.417em 0.667em;
+}
+
+// --- Tablet (min-width: 600px) ---
+@media (min-width: 600px) {
   .game-board {
-    padding: 0.667em; /* 8px */
+    padding: 1em;
   }
 
-  .game-header {
-    margin-bottom: 0;
-    margin-top: 0;
-  }
-
-  h1 {
-    font-size: 1.3em;
-  }
-
-  .back-btn {
-    padding: 0.5em 1em; /* 6px 12px */
-    font-size: 1em; /* 12px */
-  }
-
-  .center-area {
-    gap: 1.5em; /* 18px */
-    
-    .card-back.stack {
-      width: 6.25em; /* 75px */
-      height: 8.75em; /* 105px */
-    }
+  .hand-cards {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    justify-content: center;
+    gap: 0.667em;
   }
 
   .action-buttons {
+    position: static;
+    background: transparent;
+    backdrop-filter: none;
+    margin: 0 0 0.833em;
+    padding: 0;
+    justify-content: center;
+    gap: 0.667em;
+
     .action-btn {
-      font-size: 0.833em; /* 10px */
-      padding: 0.333em 0.667em; /* 4px 8px */
+      font-size: 1em;
+      padding: 0.5em 1em;
+      min-height: 2.667em; /* 44px at 16px base */
+    }
+  }
+
+  .opponents {
+    flex-direction: row;
+  }
+
+  .center-area {
+    gap: 2.083em;
+    margin: 1.25em 0;
+
+    .card-back.stack {
+      width: 7.5em;
+      height: 10.417em;
     }
   }
 
   .status-message {
-    font-size: 1em; /* 12px */
-    padding: 0.667em 1.333em; /* 8px 16px */
+    font-size: 1.167em;
+    padding: 0.833em 1.667em;
   }
 
+  // Chat: zurück zu normalem Inline-Block, kein Bottom Sheet
   .chat-log {
-    max-height: 18.333em; /* 220px */
-    
-    h3 {
-      font-size: 1em;
+    position: static;
+    transform: none;
+    max-height: 23.333em;
+    width: 100%;
+    border-radius: 1em;
+    transition: none;
+
+    &.chat-visible {
+      transform: none;
     }
   }
 
-  .chat-message {
-    font-size: 0.917em; /* 11px */
-    padding: 0.417em 0.667em; /* 5px 8px */
+  .chat-toggle-btn {
+    display: none;
+  }
+
+  .chat-backdrop {
+    display: none;
+  }
+}
+
+// --- Desktop (min-width: 768px) ---
+@media (min-width: 768px) {
+  .game-area {
+    display: grid;
+    grid-template-columns: 1fr 26.667em; /* game-main flex, chat-log 320px */
+    gap: 1.333em;
+    height: 100%;
+    align-items: stretch;
+  }
+
+  .game-container {
+    height: calc(100dvh - 8.333em);
+    min-height: 0;
+  }
+
+  .game-main {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .chat-log {
+    width: 26.667em;
+    height: 100%;
+    max-height: none;
+    position: static;
+    transform: none;
+  }
+
+  .game-header {
+    margin: 1em auto 2em auto;
   }
 }
 
@@ -1061,5 +1215,119 @@ h1 {
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+// ========== PHASE 3 — TOUCH INTERACTIONS ==========
+
+// 3a — Avatar Touch-Modal (zentriert, für Touch-Geräte)
+.avatar-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: fadeIn 0.2s ease;
+}
+
+.avatar-modal-content {
+  position: relative;
+  animation: zoomIn 0.25s ease;
+}
+
+.avatar-modal-img {
+  width: min(80vw, 28em);
+  height: min(80vw, 28em);
+  border-radius: 50%;
+  object-fit: cover;
+  border: 0.333em solid white;
+  box-shadow: 0 0.667em 2.667em rgba(0, 0, 0, 0.5);
+  display: block;
+}
+
+.avatar-modal-close {
+  position: absolute;
+  top: -1em;
+  right: -1em;
+  width: 2.667em; /* 32px */
+  height: 2.667em;
+  border-radius: 50%;
+  background: white;
+  color: #ff0000;
+  border: 0.167em solid #ff0000;
+  font-size: 1.333em;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  min-width: 44px;  /* 3b: Touch-Target */
+  min-height: 44px;
+}
+
+// 3b — Touch-Targets: alle interaktiven Elemente ≥ 44px
+.back-btn {
+  min-width: 44px;
+  min-height: 44px;
+  width: 2.75em;
+  height: 2.75em;
+}
+
+.player-avatar-small[role="button"] {
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.deck {
+  min-width: 44px;
+}
+
+.action-btn {
+  min-height: 44px;
+}
+
+.chat-toggle-btn {
+  min-height: 44px;
+}
+
+// 3c — @media (hover: none): Hover-Effekte für Touch-Geräte deaktivieren
+@media (hover: none) {
+  // Deck-Hover deaktivieren
+  .deck:hover {
+    transform: none;
+  }
+
+  // Karten-Hover deaktivieren (in card.component.ts inline styles)
+  // Hier: card-back hover
+  .card-back.clickable:hover {
+    transform: none;
+    box-shadow: 0 0.167em 0.333em rgba(0, 0, 0, 0.2);
+  }
+
+  // Avatar-Hover deaktivieren — Touch nutzt Click-Modal
+  .player-avatar-small:hover,
+  .chat-player-avatar:hover {
+    opacity: 1;
+  }
+
+  // Button-Hover deaktivieren
+  .back-btn:hover {
+    background: white;
+    color: #ff0000;
+    transform: none;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    box-shadow: 0 0.167em 0.333em rgba(0, 0, 0, 0.2);
+  }
+
+  // Desktop Hover-Zoom-Overlay verstecken (wird durch Click-Modal ersetzt)
+  .avatar-zoom-overlay {
+    display: none;
   }
 }

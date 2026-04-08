@@ -106,10 +106,12 @@ button {
   }
 }
 
-// Responsive Utilities
-@media (max-width: $tablet) {
+// Responsive Utilities — Mobile-First (min-width)
+// Mobile base: 12px, Tablet+: 13px, Desktop+: 14px
+
+@media (min-width: $tablet) {
   body {
-    font-size: 13px; /* Größere Base für Tablet */
+    font-size: 13px;
   }
   :root {
     --spacing-md: 1em;
@@ -117,12 +119,12 @@ button {
   }
 }
 
-@media (max-width: $mobile) {
+@media (min-width: $desktop) {
   body {
-    font-size: 12px; /* Zurück zu Base für Mobile */
+    font-size: 14px;
   }
   :root {
-    --spacing-md: 0.833em; /* 10px */
-    --spacing-lg: 1.333em; /* 16px */
+    --spacing-md: 1em;
+    --spacing-lg: 1.333em; /* ~19px */
   }
 }

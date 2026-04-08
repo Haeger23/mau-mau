@@ -120,17 +120,19 @@ export interface GameSetup {
     </div>
   `,
   styles: [`
+    /* ===== START SCREEN — Mobile-First ===== */
+
     .start-screen {
-      min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       font-family: sans-serif;
     }
 
-    /* Hero Section - großflächiges Rot wie mau-mau.ch */
+    /* Hero Section — Mobile base */
     .hero-section {
       background: #ff0000;
-      padding: 5em 1.667em 5em; /* 60px 20px 60px */
+      padding: 3.333em 1.333em; /* 40px 16px — kompakt auf Mobile */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -143,11 +145,11 @@ export interface GameSetup {
     }
 
     .logo-container {
-      max-width: 26.667em; /* 320px */
+      max-width: 20em; /* 240px auf Mobile */
       width: 100%;
-      margin: 0 0 1.667em; /* reset h1 margin */
-      padding: 0; /* reset h1 padding */
-      font-size: 1em; /* reset h1 font-size */
+      margin: 0 0 1.333em;
+      padding: 0;
+      font-size: 1em;
     }
 
     .sr-only {
@@ -165,13 +167,13 @@ export interface GameSetup {
     .logo {
       width: 100%;
       height: auto;
-      filter: drop-shadow(0 0.333em 0.667em rgba(0, 0, 0, 0.2)); /* 0 4px 8px */
+      filter: drop-shadow(0 0.333em 0.667em rgba(0, 0, 0, 0.2));
     }
 
     .tagline {
       color: #ffffff;
       font-family: 'Lato', sans-serif;
-      font-size: 2.5em; /* 30px */
+      font-size: 1.1em; /* klein auf Mobile */
       font-weight: 900;
       letter-spacing: 0.1em;
       margin: 0;
@@ -179,35 +181,35 @@ export interface GameSetup {
       text-transform: uppercase;
     }
 
-    /* Settings Section */
+    /* Settings Section — Mobile base */
     .settings-section {
       flex: 1;
       background: #ffffff;
       display: flex;
       justify-content: center;
-      padding: 3.333em 1.667em 0; /* 40px 20px 0px */
+      padding: 2em 1em 1.5em; /* kompakter auf Mobile */
     }
 
     .settings-container {
       background: white;
-      border-radius: 1.333em; /* 16px */
-      padding: 3.333em; /* 40px */
+      border-radius: 1.333em;
+      padding: 2em 1.333em; /* schmaler auf Mobile */
       max-width: 45.833em; /* 550px */
       width: 100%;
       height: fit-content;
-      box-shadow: 0 0.667em 2.667em rgba(0, 0, 0, 0.1); /* 0 8px 32px */
+      box-shadow: none; /* kein Shadow auf Mobile (flat) */
     }
 
     .setup-form {
       display: flex;
       flex-direction: column;
-      gap: 2.333em; /* 28px */
+      gap: 1.667em; /* 28px → kompakter */
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 0.833em; /* 10px */
+      gap: 0.833em;
     }
 
     label {
@@ -219,15 +221,16 @@ export interface GameSetup {
     .name-avatar-container {
       display: flex;
       align-items: center;
-      gap: 1.25em; /* 15px */
+      gap: 1em;
     }
 
+    /* Avatar — Mobile: 80px */
     .player-avatar {
-      width: 8.333em; /* 100px */
-      height: 8.333em; /* 100px */
+      width: 6.667em;
+      height: 6.667em;
       border-radius: 50%;
       background: #fff5f5;
-      border: 0.25em solid #ff0000; /* 3px */
+      border: 0.25em solid #ff0000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -242,13 +245,13 @@ export interface GameSetup {
     }
 
     .avatar-placeholder {
-      font-size: 4em; /* 48px */
+      font-size: 3.333em; /* 40px auf Mobile */
       color: #ff0000;
       font-weight: bold;
     }
 
     .avatar-letter {
-      font-size: 4.333em; /* 52px */
+      font-size: 3.333em;
       color: #ff0000;
       font-weight: bold;
     }
@@ -260,44 +263,47 @@ export interface GameSetup {
 
     .clear-btn {
       position: absolute;
-      right: 1em; /* 12px */
+      right: 1em;
       top: 50%;
       background: #e0e0e0;
       border: none;
       border-radius: 50%;
-      width: 2em; /* 24px */
-      height: 2em; /* 24px */
+      width: 2.667em; /* 44px touch target / font-size */
+      height: 2.667em;
+      min-width: 44px;
+      min-height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 1.167em; /* 14px */
+      font-size: 1em;
       color: #666;
       transition: background 0.2s ease, color 0.2s ease;
       padding: 0;
       line-height: 1;
-      margin-top: -1em; /* -12px */
+      margin-top: -1.333em;
+    }
 
-      &:hover {
-        background: #ff0000;
-        color: white;
-      }
+    .clear-btn:hover {
+      background: #ff0000;
+      color: white;
     }
 
     .name-input {
-      padding: 1.167em 1.5em; /* 14px 18px */
-      font-size: 1.333em; /* 16px */
-      border: 0.167em solid #e0e0e0; /* 2px */
-      border-radius: 0.667em; /* 8px */
+      padding: 1em 1.333em; /* etwas kompakter auf Mobile */
+      font-size: 1.333em;
+      border: 0.167em solid #e0e0e0;
+      border-radius: 0.667em;
       transition: all 0.2s ease;
       font-family: inherit;
       width: 100%;
+      /* 44px min-height (16px base × 1.333em = ~22px font → 1em top+bottom = 44px gesamt) */
     }
 
     .name-input:focus {
       outline: none;
       border-color: #ff0000;
-      box-shadow: 0 0 0 0.25em rgba(255, 0, 0, 0.1); /* 0 0 0 3px */
+      box-shadow: 0 0 0 0.25em rgba(255, 0, 0, 0.1);
     }
 
     .suggestions-list {
@@ -306,25 +312,26 @@ export interface GameSetup {
       left: 0;
       right: 0;
       background: white;
-      border: 0.167em solid #ff0000; /* 2px */
+      border: 0.167em solid #ff0000;
       border-top: none;
-      border-radius: 0 0 0.667em 0.667em; /* 0 0 8px 8px */
+      border-radius: 0 0 0.667em 0.667em;
       list-style: none;
       margin: 0;
       padding: 0;
-      max-height: 16.667em; /* 200px */
+      max-height: 16.667em;
       overflow-y: auto;
       z-index: 1000;
-      box-shadow: 0 0.333em 1em rgba(0, 0, 0, 0.15); /* 0 4px 12px */
+      box-shadow: 0 0.333em 1em rgba(0, 0, 0, 0.15);
     }
 
     .suggestion-item {
-      padding: 1em 1.5em; /* 12px 18px */
+      padding: 0.917em 1.333em; /* min 44px touch target */
       cursor: pointer;
       transition: background 0.2s ease;
       color: #333;
       display: flex;
       align-items: center;
+      min-height: 44px;
     }
 
     .suggestion-item:hover,
@@ -334,30 +341,32 @@ export interface GameSetup {
     }
 
     .player-thumbnail {
-      width: 2.667em; /* 32px */
-      height: 2.667em; /* 32px */
+      width: 2.667em;
+      height: 2.667em;
       border-radius: 50%;
       object-fit: cover;
-      margin-right: 1em; /* 12px */
-      border: 0.167em solid #e0e0e0; /* 2px */
+      margin-right: 1em;
+      border: 0.167em solid #e0e0e0;
     }
 
     .suggestion-item:last-child {
-      border-radius: 0 0 0.5em 0.5em; /* 0 0 6px 6px */
+      border-radius: 0 0 0.5em 0.5em;
     }
 
+    /* Opponent selector — 2 Spalten auf Mobile */
     .opponent-selector {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.833em; /* 10px */
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.833em;
     }
 
     .opponent-btn {
-      padding: 1.333em 1em; /* 16px 12px */
-      font-size: 1.25em; /* 15px */
+      padding: 1em 0.833em;
+      min-height: 44px; /* Touch-Target */
+      font-size: 1.167em;
       font-weight: 600;
-      border: 0.167em solid #e0e0e0; /* 2px */
-      border-radius: 0.667em; /* 8px */
+      border: 0.167em solid #e0e0e0;
+      border-radius: 0.667em;
       background: white;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -378,19 +387,20 @@ export interface GameSetup {
     }
 
     .start-btn {
-      padding: 1.333em 3.333em; /* 16px 40px */
-      font-size: 1.5em; /* 18px */
+      padding: 1em 2em;
+      min-height: 44px; /* Touch-Target */
+      font-size: 1.333em;
       font-weight: 600;
       background: #ff0000;
       color: white;
       border: none;
-      border-radius: 0.667em; /* 8px */
+      border-radius: 0.667em;
       cursor: pointer;
       transition: all 0.2s ease;
-      margin-top: 0.667em; /* 8px */
+      margin-top: 0.5em;
       font-family: inherit;
       text-transform: uppercase;
-      letter-spacing: 0.083em; /* 1px */
+      letter-spacing: 0.083em;
     }
 
     .start-btn:hover:not(:disabled) {
@@ -405,23 +415,24 @@ export interface GameSetup {
 
     .rules-preview {
       text-align: center;
-      padding-top: 0.667em; /* 8px */
+      padding-top: 0.667em;
       text-transform: uppercase;
       font-weight: 900;
-      letter-spacing: 0.083em; /* 1px */
+      letter-spacing: 0.083em;
     }
 
     .rules-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.667em; /* 8px */
+      gap: 0.667em;
       color: #c50000;
       text-decoration: none;
-      font-size: 1.25em; /* 15px */
+      font-size: 1.167em;
       font-weight: 500;
       transition: all 0.2s ease;
-      padding: 0.833em 1.333em; /* 10px 16px */
-      border-radius: 0.5em; /* 6px */
+      padding: 0.833em 1.333em;
+      min-height: 44px; /* Touch-Target */
+      border-radius: 0.5em;
     }
 
     .rules-link:hover {
@@ -429,40 +440,84 @@ export interface GameSetup {
     }
 
     .rules-link:focus {
-      outline: 0.167em solid #ff0000; /* 2px */
-      outline-offset: 0.167em; /* 2px */
+      outline: 0.167em solid #ff0000;
+      outline-offset: 0.167em;
     }
 
-    @media (max-width: 600px) {
+    /* hover:none — Touch-Gerät: Hover-Effekte deaktivieren */
+    @media (hover: none) {
+      .opponent-btn:hover {
+        background: white;
+        border-color: #e0e0e0;
+        color: #333;
+      }
+      .start-btn:hover:not(:disabled) {
+        background: #ff0000;
+      }
+      .rules-link:hover {
+        background: transparent;
+      }
+      .clear-btn:hover {
+        background: #e0e0e0;
+        color: #666;
+      }
+    }
+
+    /* ===== Tablet+ (min-width: 600px) ===== */
+    @media (min-width: 600px) {
       .hero-section {
-        padding: 3.333em 1.667em 3.333em; /* 40px 20px 40px */
+        padding: 5em 1.667em;
       }
 
       .logo-container {
-        max-width: 20em; /* 240px */
+        max-width: 26.667em; /* 320px */
+        margin-bottom: 1.667em;
       }
 
       .tagline {
-        font-size: 1.1em;
+        font-size: 2.5em;
+      }
+
+      .settings-section {
+        padding: 3.333em 1.667em 0;
       }
 
       .settings-container {
-        padding: 2.5em 1.667em; /* 30px 20px */
-        margin-top: -2.5em; /* -30px */
+        padding: 3.333em;
+        margin-top: 0;
+        box-shadow: 0 0.667em 2.667em rgba(0, 0, 0, 0.1);
       }
 
-      .opponent-selector {
-        grid-template-columns: repeat(2, 1fr);
+      .setup-form {
+        gap: 2.333em;
       }
 
       .player-avatar {
-        width: 6.667em; /* 80px */
-        height: 6.667em; /* 80px */
+        width: 8.333em; /* 100px */
+        height: 8.333em;
       }
 
-      .avatar-placeholder,
+      .avatar-placeholder {
+        font-size: 4em;
+      }
+
       .avatar-letter {
-        font-size: 3.333em; /* 40px */
+        font-size: 4.333em;
+      }
+
+      .opponent-selector {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .opponent-btn {
+        font-size: 1.25em;
+        padding: 1.333em 1em;
+      }
+
+      .start-btn {
+        padding: 1.333em 3.333em;
+        font-size: 1.5em;
+        margin-top: 0.667em;
       }
     }
   `]

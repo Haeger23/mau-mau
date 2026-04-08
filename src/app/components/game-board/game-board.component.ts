@@ -20,6 +20,8 @@ export class GameBoardComponent {
   protected showWinOverlay = signal<boolean>(true);
   protected hoverAvatarUrl = signal<string | null>(null);
   protected hoverAvatarPosition = signal<{ x: number, y: number } | null>(null);
+  protected chatVisible = signal<boolean>(false);
+  protected avatarModalUrl = signal<string | null>(null);
   private hoverTimeout: ReturnType<typeof setTimeout> | null = null;
 
   gameSetup = input.required<GameSetup>();
@@ -226,6 +228,18 @@ export class GameBoardComponent {
     if (human && human.isActive) {
       this.gameService.pickupSinglePenaltyCard(human.id, card.id, isPickupable);
     }
+  }
+
+  toggleChat(): void {
+    this.chatVisible.update(v => !v);
+  }
+
+  onAvatarClick(imageUrl: string): void {
+    this.avatarModalUrl.update(current => current === imageUrl ? null : imageUrl);
+  }
+
+  closeAvatarModal(): void {
+    this.avatarModalUrl.set(null);
   }
 
   toggleRuleExplanation(msg: ChatMessage): void {
