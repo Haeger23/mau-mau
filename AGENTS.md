@@ -57,6 +57,25 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 
 ## Testing
 
+### Requirements — What to Test
+
+- **Every new or modified service method** must have at least one unit test covering the happy path and any edge cases.
+- **Every new or modified component** must have tests for all `input()`/`output()` bindings and user interactions.
+- **Every new user-visible game flow** (e.g. a new card rule, a new screen) must have a corresponding E2E test.
+- **Target ≥80% line coverage** on any file you create or modify. Check with `npm test -- --coverage`.
+- Always use `gameService.setSeed(12345)` (or any fixed seed) in tests involving game logic to ensure determinism.
+
+For AI behaviour tests, always call `gameService.setSeed(N)` before the scenario. With a fixed seed, AI card selection is deterministic and assertable.
+
+When adding a new card rule, add it before `DefaultRule` in `rule-engine.service.ts`. If it interacts with penalty or special-round state, add it before the relevant rule (e.g., before `QueenRule` for Queen Round interactions).
+
+### Done Checklist — Before Marking Any Task Complete
+
+1. `npm test` passes with zero failures
+2. Every new/changed source file has a corresponding `.spec.ts` with meaningful tests
+3. `npx playwright test` passes if any UI or game flow was changed
+4. `npm run lint` passes (or auto-fixed with `npm run lint:fix`)
+
 ### Unit Tests — Vitest
 - Runner: **Vitest** (`vitest`) with `jsdom` environment
 - Coverage: **`@vitest/coverage-v8`** (run via `ng test`)
@@ -76,6 +95,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Template accessibility rules enabled via `@angular-eslint/template/accessibility`
 - Run lint: `npm run lint`
 - Auto-fix: `npm run lint:fix`
+- Do not leave `console.log` in production code. Use `console.error` only for genuinely unexpected error states.
 
 ## Git Conventions
 

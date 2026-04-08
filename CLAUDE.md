@@ -4,6 +4,12 @@
 
 This is a Swiss Mau-Mau card game built with Angular 21. It implements the official Swiss rules from mau-mau.ch, supports 1–4 players (human + AI opponents), and runs as a PWA deployed at `/mau-mau`.
 
+## Game Philosophy
+
+Mistakes are consistently penalized in this Mau-Mau variant. The UI intentionally does **not** prevent errors — buttons and actions remain available at all times, even when they would be rule-violating. This is by design: the possibility of making mistakes is a core part of the game experience.
+
+When a rule-violating action is triggered, penalty cards are distributed. The tone when doing so may be slightly sarcastic, but must always be grounded in a clear rule reference and explanation. It should never feel like a personal attack — the baseline tone remains professional and friendly.
+
 ## Key Architecture
 
 **Services (core logic):**
@@ -36,13 +42,18 @@ See [AGENTS.md](AGENTS.md) for the full style guide. Key points:
 - Deterministic testing uses `SeededRandom` (LCG) — call `gameService.setSeed()` to control shuffle/AI
 - Test IDs follow `{component}-{element}` pattern (e.g. `card-hearts-7`)
 
+**Done checklist — required before any task is complete:**
+1. `npm test` passes (zero failures)
+2. New/changed code has a `.spec.ts` with meaningful tests
+3. `npx playwright test` passes if UI or game flow changed
+
 ## Swiss Mau-Mau Rules Summary
 
 | Card | Effect |
 |------|--------|
 | 7 | Next player draws +2 (chains: 7 on 7 = +4, etc.) |
 | 8 | Next player is skipped |
-| 9 | Allows sequential same-suit plays |
+| 9 | Activates a "nine base": the same player may continue playing any number of additional cards of the same suit in the same turn. Effects of chained cards are applied only when the turn ends (top card only). The turn does not pass until the player ends it. |
 | 10 | Replicates the card below it |
 | Jack | Player chooses the new suit (no Jack-on-Jack) |
 | Queen | Triggers "Dame Round" — only Queens and 10s playable |
@@ -67,4 +78,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full branch naming, commit format
 
 - [AGENTS.md](AGENTS.md) — coding conventions & style guide (read this first)
 - [docs/TURN_FLOW.md](docs/TURN_FLOW.md) — state machine diagram, AI turn logic, race condition guards
+- [docs/COMPONENT_FLOW.md](docs/COMPONENT_FLOW.md) — signal-to-component data-flow reference
 - [MATERIAL_DESIGN_3.md](MATERIAL_DESIGN_3.md) — MD3 theming system
