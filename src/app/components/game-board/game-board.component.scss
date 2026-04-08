@@ -140,7 +140,7 @@ h1 {
 .game-container {
   max-width: 133.333em; /* 1600px */
   margin: 0 auto;
-  height: calc(100vh - 8.333em); /* Viewport minus Header und Padding */
+  min-height: 100dvh; /* kein Clip-Effekt, Scroll bleibt möglich */
 }
 
 .game-area {
@@ -931,6 +931,7 @@ h1 {
 // ========== RESPONSIVE DESIGN ==========
 @media (max-width: 768px) {
   .game-area {
+    display: flex;
     flex-direction: column;
   }
 
@@ -943,6 +944,7 @@ h1 {
     width: 100%;
     max-height: 23.333em; /* 280px */
     order: -1;
+    box-sizing: border-box;
   }
 
   .opponents {
