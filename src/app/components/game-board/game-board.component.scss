@@ -1217,3 +1217,117 @@ h1 {
     opacity: 1;
   }
 }
+
+// ========== PHASE 3 — TOUCH INTERACTIONS ==========
+
+// 3a — Avatar Touch-Modal (zentriert, für Touch-Geräte)
+.avatar-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: fadeIn 0.2s ease;
+}
+
+.avatar-modal-content {
+  position: relative;
+  animation: zoomIn 0.25s ease;
+}
+
+.avatar-modal-img {
+  width: min(80vw, 28em);
+  height: min(80vw, 28em);
+  border-radius: 50%;
+  object-fit: cover;
+  border: 0.333em solid white;
+  box-shadow: 0 0.667em 2.667em rgba(0, 0, 0, 0.5);
+  display: block;
+}
+
+.avatar-modal-close {
+  position: absolute;
+  top: -1em;
+  right: -1em;
+  width: 2.667em; /* 32px */
+  height: 2.667em;
+  border-radius: 50%;
+  background: white;
+  color: #ff0000;
+  border: 0.167em solid #ff0000;
+  font-size: 1.333em;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  min-width: 44px;  /* 3b: Touch-Target */
+  min-height: 44px;
+}
+
+// 3b — Touch-Targets: alle interaktiven Elemente ≥ 44px
+.back-btn {
+  min-width: 44px;
+  min-height: 44px;
+  width: 2.75em;
+  height: 2.75em;
+}
+
+.player-avatar-small[role="button"] {
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.deck {
+  min-width: 44px;
+}
+
+.action-btn {
+  min-height: 44px;
+}
+
+.chat-toggle-btn {
+  min-height: 44px;
+}
+
+// 3c — @media (hover: none): Hover-Effekte für Touch-Geräte deaktivieren
+@media (hover: none) {
+  // Deck-Hover deaktivieren
+  .deck:hover {
+    transform: none;
+  }
+
+  // Karten-Hover deaktivieren (in card.component.ts inline styles)
+  // Hier: card-back hover
+  .card-back.clickable:hover {
+    transform: none;
+    box-shadow: 0 0.167em 0.333em rgba(0, 0, 0, 0.2);
+  }
+
+  // Avatar-Hover deaktivieren — Touch nutzt Click-Modal
+  .player-avatar-small:hover,
+  .chat-player-avatar:hover {
+    opacity: 1;
+  }
+
+  // Button-Hover deaktivieren
+  .back-btn:hover {
+    background: white;
+    color: #ff0000;
+    transform: none;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    box-shadow: 0 0.167em 0.333em rgba(0, 0, 0, 0.2);
+  }
+
+  // Desktop Hover-Zoom-Overlay verstecken (wird durch Click-Modal ersetzt)
+  .avatar-zoom-overlay {
+    display: none;
+  }
+}
