@@ -28,6 +28,8 @@
                        (mouseenter)="avatar.type === 'image' ? onAvatarHover(avatar.value, $event) : null"
                        (mouseleave)="onAvatarHover(null)"
                        (click)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.enter)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.space)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
                        [attr.role]="avatar.type === 'image' ? 'button' : null"
                        [attr.aria-label]="avatar.type === 'image' ? 'Avatar von ' + player.name + ' vergrössern' : null"
                        [attr.tabindex]="avatar.type === 'image' ? 0 : null">
@@ -137,6 +139,8 @@
                      (mouseenter)="avatar.type === 'image' ? onAvatarHover(avatar.value, $event) : null"
                      (mouseleave)="onAvatarHover(null)"
                      (click)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                     (keydown.enter)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                     (keydown.space)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
                      [attr.role]="avatar.type === 'image' ? 'button' : null"
                      [attr.aria-label]="avatar.type === 'image' ? 'Mein Avatar vergrössern' : null"
                      [attr.tabindex]="avatar.type === 'image' ? 0 : null">
@@ -286,6 +290,8 @@
                        (mouseenter)="avatar.type === 'image' ? onAvatarHover(avatar.value, $event) : null"
                        (mouseleave)="onAvatarHover(null)"
                        (click)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.enter)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
+                       (keydown.space)="avatar.type === 'image' ? onAvatarClick(avatar.value) : null"
                        [attr.role]="avatar.type === 'image' ? 'button' : null"
                        [attr.aria-label]="avatar.type === 'image' ? 'Avatar von ' + msg.playerName + ' vergrössern' : null"
                        [attr.tabindex]="avatar.type === 'image' ? 0 : null">
@@ -330,7 +336,11 @@
            role="dialog"
            aria-modal="true"
            aria-label="Avatar schliessen">
-        <div class="avatar-modal-content" (click)="$event.stopPropagation()">
+        <div class="avatar-modal-content"
+             tabindex="-1"
+             (click)="$event.stopPropagation()"
+             (keydown.enter)="$event.stopPropagation()"
+             (keydown.space)="$event.stopPropagation()">
           <img [src]="avatarModalUrl()!" alt="Avatar" class="avatar-modal-img">
           <button class="avatar-modal-close" (click)="closeAvatarModal()" aria-label="Schliessen">✕</button>
         </div>
