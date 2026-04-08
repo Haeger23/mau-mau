@@ -34,8 +34,8 @@ import { Card } from '../../models/card.model';
   `,
   styles: [`
     .card {
-      width: 10em; /* 120px */
-      height: 14em; /* 168px */
+      width: clamp(6em, 10vw, 10em);  /* 72–120px fluid */
+      height: clamp(8.4em, 14vw, 14em); /* 100–168px fluid */
       background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
       border-radius: 1em; /* 12px */
       position: relative;

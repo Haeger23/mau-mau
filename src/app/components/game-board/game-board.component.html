@@ -254,8 +254,19 @@
 
       </div>
       
-      <!-- Chat Log -->
-      <div class="chat-log">
+      <!-- Chat Log (Mobile: Bottom Sheet via toggle; Tablet+: immer sichtbar) -->
+      @if (chatVisible()) {
+        <div class="chat-backdrop" (click)="toggleChat()" aria-hidden="true"></div>
+      }
+      <button
+        class="chat-toggle-btn"
+        type="button"
+        aria-label="Spielverlauf anzeigen"
+        (click)="toggleChat()">
+        {{ chatVisible() ? '✕ Schliessen' : '💬 Verlauf' }}
+      </button>
+
+      <div class="chat-log" [class.chat-visible]="chatVisible()">
         <h3>Spielverlauf</h3>
         <div class="chat-messages">
           @for (msg of gameState().chatLog.slice().reverse(); track $index) {

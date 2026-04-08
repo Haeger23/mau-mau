@@ -20,6 +20,7 @@ export class GameBoardComponent {
   protected showWinOverlay = signal<boolean>(true);
   protected hoverAvatarUrl = signal<string | null>(null);
   protected hoverAvatarPosition = signal<{ x: number, y: number } | null>(null);
+  protected chatVisible = signal<boolean>(false);
   private hoverTimeout: ReturnType<typeof setTimeout> | null = null;
 
   gameSetup = input.required<GameSetup>();
@@ -226,6 +227,10 @@ export class GameBoardComponent {
     if (human && human.isActive) {
       this.gameService.pickupSinglePenaltyCard(human.id, card.id, isPickupable);
     }
+  }
+
+  toggleChat(): void {
+    this.chatVisible.update(v => !v);
   }
 
   toggleRuleExplanation(msg: ChatMessage): void {
